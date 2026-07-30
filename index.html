@@ -13,11 +13,7 @@
       color: #fff; 
       margin-top: 25px; 
       margin-bottom: 12px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
     }
-    .date-badge { font-size: 14px; color: #4caf50; font-weight: bold; background: #1b381c; padding: 4px 8px; border-radius: 4px; }
 
     /* 상단 입력 카드 */
     .input-card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #333; }
@@ -48,7 +44,7 @@
 
     /* 가로로 놓이는 부위별 칸 상자 */
     .category-box {
-      flex: 0 0 230px; /* 박스 가로 크기 고정 */
+      flex: 0 0 240px; /* 박스 가로 크기 고정 */
       scroll-snap-align: start;
       background: #1e1e1e;
       border: 1px solid #2d2d2d;
@@ -86,6 +82,14 @@
     }
     li:last-child { margin-bottom: 0; }
 
+    /* 운동 항목 내부 날짜 태그 스타일 */
+    .date-tag {
+      color: #888;
+      font-size: 11px;
+      margin-right: 4px;
+      font-weight: normal;
+    }
+
     .btn-delete { 
       background: #e53935; 
       color: #fff; 
@@ -96,6 +100,7 @@
       font-size: 11px; 
       width: auto;
       margin-top: 0;
+      margin-left: 6px;
     }
     .btn-delete:hover { background: #d32f2f; }
     .empty-text { color: #555; font-size: 13px; text-align: center; margin: auto 0; padding: 20px 0; }
@@ -122,12 +127,8 @@
     <button class="btn-add" onclick="addLog()">기록 저장하기</button>
   </div>
 
-  <!-- 2. 오늘 날짜 표시 및 가로로 놓인 부위별 칸 -->
-  <div class="section-title">
-    <span>📋 오늘 기록한 운동</span>
-    <span class="date-badge" id="todayBadge"></span>
-  </div>
-  
+  <!-- 2. 가로로 놓인 부위별 칸 -->
+  <div class="section-title">📋 운동 기록 목록</div>
   <div id="logBoxesContainer"></div>
 
   <script>
@@ -140,19 +141,10 @@
       { name: '유산소', emoji: '🏃‍♂️' }
     ];
 
-    // 오늘 날짜 구하기 (YYYY-MM-DD)
-    function getTodayKey() {
+    // 오늘 날짜 포맷 (예: 7/30)
+    function getTodayFormatted() {
       const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
-    // 오늘 날짜 표기 (예: 2026. 7. 30.)
-    function displayTodayDate() {
-      const today = new Date();
-      document.getElementById('todayBadge').innerText = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
+      return `${today.getMonth() + 1}/${today.getDate()}`;
     }
 
     // 선택 부위에 따른 입력창 생성
@@ -186,7 +178,7 @@
       }
 
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
-      const todayKey = getTodayKey();
+      const dateStr = getTodayFormatted(); // 현재 날짜 (월/일) 저장
 
       if (category === '유산소') {
         const time = document.getElementById('time').value.trim();
@@ -196,7 +188,7 @@
           alert('운동 시간과 소모 칼로리를 모두 입력해주세요!');
           return;
         }
-        logs.push({ date: todayKey, category, exercise, time, calories, isCardio: true });
+        logs.push({ dateStr, category, exercise, time, calories, isCardio: true });
       } else {
         const weight = document.getElementById('weight').value.trim();
         const reps = document.getElementById('reps').value.trim();
@@ -205,7 +197,7 @@
           alert('무게와 횟수를 모두 입력해주세요!');
           return;
         }
-        logs.push({ date: todayKey, category, exercise, weight, reps, isCardio: false });
+        logs.push({ dateStr, category, exercise, weight, reps, isCardio: false });
       }
 
       localStorage.setItem('gymLogs', JSON.stringify(logs));
@@ -214,18 +206,16 @@
       loadLogs();
     }
 
-    // 기록 불러오기 (오늘 날짜의 기록만 각 가슴/등/하체 칸으로 표시)
+    // 기록 불러오기 (각 운동 옆에 날짜 표기)
     function loadLogs() {
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
-      const todayKey = getTodayKey();
       const container = document.getElementById('logBoxesContainer');
       container.innerHTML = '';
 
       categories.forEach(cat => {
-        // 오늘 날짜이면서 해당 카테고리인 운동만 필터링
         const catLogs = logs
           .map((log, index) => ({ ...log, originalIndex: index }))
-          .filter(log => (log.date === todayKey || !log.date) && log.category === cat.name);
+          .filter(log => log.category === cat.name);
 
         const box = document.createElement('div');
         box.className = 'category-box';
@@ -240,10 +230,13 @@
             const detailText = item.isCardio 
               ? `${item.time}분·${item.calories}kcal`
               : `${item.weight}kg × ${item.reps}회`;
+            
+            // 날짜 정보가 없으면 오늘 날짜 기본 적용
+            const dateLabel = item.dateStr || getTodayFormatted();
 
             contentHtml += `
               <li>
-                <span><strong>${item.exercise}</strong>: ${detailText}</span>
+                <span><span class="date-tag">[${dateLabel}]</span><strong>${item.exercise}</strong>: ${detailText}</span>
                 <button class="btn-delete" onclick="deleteLog(${item.originalIndex})">삭제</button>
               </li>
             `;
@@ -265,7 +258,6 @@
     }
 
     // 초기화 실행
-    displayTodayDate();
     renderInputFields();
     loadLogs();
   </script>
