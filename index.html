@@ -7,8 +7,18 @@
   <style>
     body { font-family: sans-serif; background-color: #121212; color: #fff; padding: 20px; max-width: 500px; margin: 0 auto; }
     h1 { text-align: center; color: #4caf50; margin-bottom: 20px; }
-    h2 { font-size: 20px; color: #fff; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #4caf50; padding-bottom: 8px; }
     
+    .section-title { 
+      font-size: 18px; 
+      color: #fff; 
+      margin-top: 25px; 
+      margin-bottom: 12px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+    }
+    .date-badge { font-size: 14px; color: #4caf50; font-weight: bold; background: #1b381c; padding: 4px 8px; border-radius: 4px; }
+
     /* 상단 입력 카드 */
     .input-card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #333; }
     .input-card label { display: block; font-size: 14px; color: #aaa; margin-bottom: 6px; }
@@ -20,14 +30,37 @@
     button.btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; cursor: pointer; margin-top: 15px; font-size: 16px; }
     button.btn-add:hover { background: #45a049; }
 
-    /* 오늘 기록한 운동 - 부위별 박스(칸) 스타일 */
+    /* 가로 배치 컨테이너 (옆으로 스크롤 가능) */
+    #logBoxesContainer {
+      display: flex;
+      flex-direction: row;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* 스크롤바 스타일 */
+    #logBoxesContainer::-webkit-scrollbar { height: 6px; }
+    #logBoxesContainer::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 3px; }
+    #logBoxesContainer::-webkit-scrollbar-track { background: #2c2c2c; }
+
+    /* 가로로 놓이는 부위별 칸 상자 */
     .category-box {
+      flex: 0 0 230px; /* 박스 가로 크기 고정 */
+      scroll-snap-align: start;
       background: #1e1e1e;
       border: 1px solid #2d2d2d;
       border-radius: 10px;
       padding: 15px;
-      margin-bottom: 15px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 180px;
     }
+    
     .category-title {
       font-size: 16px;
       font-weight: bold;
@@ -36,18 +69,20 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
     }
 
-    ul { list-style: none; padding: 0; margin: 0; }
+    ul { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
     li { 
       background: #2c2c2c; 
-      padding: 10px 12px; 
+      padding: 8px 10px; 
       border-radius: 6px; 
       margin-bottom: 6px; 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      font-size: 14px; 
+      font-size: 13px; 
     }
     li:last-child { margin-bottom: 0; }
 
@@ -55,15 +90,15 @@
       background: #e53935; 
       color: #fff; 
       border: none; 
-      padding: 4px 8px; 
+      padding: 3px 6px; 
       border-radius: 4px; 
       cursor: pointer; 
-      font-size: 12px; 
+      font-size: 11px; 
       width: auto;
       margin-top: 0;
     }
     .btn-delete:hover { background: #d32f2f; }
-    .empty-text { color: #666; font-size: 13px; margin: 0; text-align: center; padding: 5px 0; }
+    .empty-text { color: #555; font-size: 13px; text-align: center; margin: auto 0; padding: 20px 0; }
   </style>
 </head>
 <body>
@@ -82,14 +117,17 @@
       <option value="유산소">🏃‍♂️ 유산소</option>
     </select>
 
-    <!-- 선택된 부위에 따라 입력창이 바뀜 -->
     <div id="dynamicInputs"></div>
 
     <button class="btn-add" onclick="addLog()">기록 저장하기</button>
   </div>
 
-  <!-- 2. 오늘 기록한 운동 섹션 (각 부위별 칸 존재) -->
-  <h2>📋 오늘 기록한 운동</h2>
+  <!-- 2. 오늘 날짜 표시 및 가로로 놓인 부위별 칸 -->
+  <div class="section-title">
+    <span>📋 오늘 기록한 운동</span>
+    <span class="date-badge" id="todayBadge"></span>
+  </div>
+  
   <div id="logBoxesContainer"></div>
 
   <script>
@@ -102,6 +140,21 @@
       { name: '유산소', emoji: '🏃‍♂️' }
     ];
 
+    // 오늘 날짜 구하기 (YYYY-MM-DD)
+    function getTodayKey() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // 오늘 날짜 표기 (예: 2026. 7. 30.)
+    function displayTodayDate() {
+      const today = new Date();
+      document.getElementById('todayBadge').innerText = `${today.getFullYear()}.${today.getMonth() + 1}.${today.getDate()}`;
+    }
+
     // 선택 부위에 따른 입력창 생성
     function renderInputFields() {
       const category = document.getElementById('category').value;
@@ -109,7 +162,7 @@
 
       if (category === '유산소') {
         container.innerHTML = `
-          <input type="text" id="exercise" placeholder="운동 이름 (예: 천국의 계단, 러닝머신)">
+          <input type="text" id="exercise" placeholder="운동 이름 (예: 천국의 계단)">
           <input type="number" id="time" placeholder="운동 시간 (분)">
           <input type="number" id="calories" placeholder="소모 칼로리 (kcal)">
         `;
@@ -133,6 +186,7 @@
       }
 
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
+      const todayKey = getTodayKey();
 
       if (category === '유산소') {
         const time = document.getElementById('time').value.trim();
@@ -142,7 +196,7 @@
           alert('운동 시간과 소모 칼로리를 모두 입력해주세요!');
           return;
         }
-        logs.push({ category, exercise, time, calories, isCardio: true });
+        logs.push({ date: todayKey, category, exercise, time, calories, isCardio: true });
       } else {
         const weight = document.getElementById('weight').value.trim();
         const reps = document.getElementById('reps').value.trim();
@@ -151,41 +205,40 @@
           alert('무게와 횟수를 모두 입력해주세요!');
           return;
         }
-        logs.push({ category, exercise, weight, reps, isCardio: false });
+        logs.push({ date: todayKey, category, exercise, weight, reps, isCardio: false });
       }
 
       localStorage.setItem('gymLogs', JSON.stringify(logs));
 
-      // 입력창 초기화 및 리스트 새로고침
       renderInputFields();
       loadLogs();
     }
 
-    // 기록 불러오기 및 부위별 박스(칸) 출력
+    // 기록 불러오기 (오늘 날짜의 기록만 각 가슴/등/하체 칸으로 표시)
     function loadLogs() {
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
+      const todayKey = getTodayKey();
       const container = document.getElementById('logBoxesContainer');
       container.innerHTML = '';
 
       categories.forEach(cat => {
-        // 해당 부위에 적힌 기록 필터링
+        // 오늘 날짜이면서 해당 카테고리인 운동만 필터링
         const catLogs = logs
           .map((log, index) => ({ ...log, originalIndex: index }))
-          .filter(log => log.category === cat.name);
+          .filter(log => (log.date === todayKey || !log.date) && log.category === cat.name);
 
-        // 부위별 칸(Box) 생성
         const box = document.createElement('div');
         box.className = 'category-box';
 
-        let contentHtml = `<div class="category-title">${cat.emoji} ${cat.name} 칸</div>`;
+        let contentHtml = `<div class="category-title">${cat.emoji} ${cat.name}</div>`;
 
         if (catLogs.length === 0) {
-          contentHtml += `<p class="empty-text">기록된 ${cat.name} 운동이 없습니다.</p>`;
+          contentHtml += `<p class="empty-text">기록 없음</p>`;
         } else {
           contentHtml += '<ul>';
           catLogs.forEach(item => {
             const detailText = item.isCardio 
-              ? `${item.time}분 · ${item.calories}kcal`
+              ? `${item.time}분·${item.calories}kcal`
               : `${item.weight}kg × ${item.reps}회`;
 
             contentHtml += `
@@ -211,7 +264,8 @@
       loadLogs();
     }
 
-    // 페이지 초기 로드
+    // 초기화 실행
+    displayTodayDate();
     renderInputFields();
     loadLogs();
   </script>
