@@ -266,14 +266,16 @@
     ];
 
     let db = null;
+    let useFallback = false;
 
     function initDB() {
+      if (!window.indexedDB) {
+        useFallback = true;
+        loadLogs();
+        return;
+      }
+
       try {
-        if (!window.indexedDB) {
-          console.error("이 브라우저는 IndexedDB를 지원하지 않습니다.");
-          return;
-        }
-        
         const dbReq = indexedDB.open("GymLogDB", 1);
 
         dbReq.onupgradeneeded = function(e) {
@@ -288,11 +290,13 @@
           loadLogs();
         };
 
-        dbReq.onerror = function(e) {
-          console.error("IndexedDB 접근 차단/오류:", e);
+        dbReq.onerror = function() {
+          useFallback = true;
+          loadLogs();
         };
       } catch (err) {
-        console.error("IndexedDB 초기화 예외:", err);
+        useFallback = true;
+        loadLogs();
       }
     }
 
@@ -346,12 +350,51 @@
       `;
     }
 
-    function addLog() {
-      if (!db) {
-        alert("브라우저 데이터 저장 기능이 차단되어 있습니다.\n\n카카오톡 인앱 브라우저나 '시크릿 모드'에서는 저장이 불가능합니다. Safari나 Chrome 전용 앱으로 접속해 주세요!");
-        return;
-      }
+    function blobToBase64(blob) {
+      return new Promise((resolve) => {
+        if (!blob) return resolve(null);
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    }
 
+    function dataURLtoBlob(dataurl) {
+      if (!dataurl) return null;
+      try {
+        const arr = dataurl.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // localStorage 백업용 함수
+    function getFallbackLogs() {
+      try {
+        return JSON.parse(localStorage.getItem('gym_logs_fallback') || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveFallbackLogs(logs) {
+      try {
+        localStorage.setItem('gym_logs_fallback', JSON.stringify(logs));
+      } catch (e) {
+        alert("저장 용량이 부족합니다. 백업 코드를 복사해둔 뒤 오래된 사진 기록을 정리를 권장합니다.");
+      }
+    }
+
+    async function addLog() {
       const category = document.getElementById('category').value;
       const exercise = document.getElementById('exercise').value.trim();
       const imgInput = document.getElementById('exerciseImg');
@@ -363,6 +406,7 @@
       }
 
       const logData = { 
+        id: Date.now(),
         category, 
         exercise,
         dateStr: getTodayFormatted(),
@@ -393,6 +437,20 @@
         logData.isCardio = false;
       }
 
+      if (!db || useFallback) {
+        // localStorage 우회 처리
+        if (file) {
+          logData.imageBase64 = await blobToBase64(file);
+          delete logData.imageBlob;
+        }
+        const currentLogs = getFallbackLogs();
+        currentLogs.push(logData);
+        saveFallbackLogs(currentLogs);
+        renderInputFields();
+        loadLogs();
+        return;
+      }
+
       const tx = db.transaction(["logs"], "readwrite");
       const store = tx.objectStore("logs");
       const addReq = store.add(logData);
@@ -403,17 +461,24 @@
       };
 
       addReq.onerror = function() {
-        alert('기록 저장 중 오류가 발생했습니다.');
+        // 실패 시 localStorage 우회
+        useFallback = true;
+        addLog();
       };
     }
 
     let activeObjectUrls = [];
 
     function loadLogs() {
-      if (!db) return;
-
       activeObjectUrls.forEach(url => URL.revokeObjectURL(url));
       activeObjectUrls = [];
+
+      if (!db || useFallback) {
+        // localStorage에서 읽기
+        const logs = getFallbackLogs();
+        renderLogBoxes(logs);
+        return;
+      }
 
       const tx = db.transaction(["logs"], "readonly");
       const store = tx.objectStore("logs");
@@ -421,59 +486,70 @@
 
       getAllReq.onsuccess = function() {
         const logs = getAllReq.result || [];
-        const container = document.getElementById('logBoxesContainer');
-        container.innerHTML = '';
-
-        categories.forEach(cat => {
-          const catLogs = logs.filter(log => log.category === cat.name);
-
-          const box = document.createElement('div');
-          box.className = 'category-box';
-
-          let contentHtml = `<div class="category-title">${cat.name}</div>`;
-
-          if (catLogs.length === 0) {
-            contentHtml += `<p class="empty-text">기록 없음</p>`;
-          } else {
-            contentHtml += '<ul>';
-            catLogs.forEach(item => {
-              const detailText = item.isCardio 
-                ? `${item.time}분·${item.calories}kcal`
-                : `${item.weight}kg × ${item.reps}회`;
-              
-              const dateLabel = item.dateStr || getTodayFormatted();
-              
-              const exerciseName = item.exercise 
-                ? `<strong>${item.exercise}</strong>` 
-                : `<span style="color:#aaa;">(사진 기록)</span>`;
-
-              let imgTag = '';
-              if (item.imageBlob) {
-                const imgUrl = URL.createObjectURL(item.imageBlob);
-                activeObjectUrls.push(imgUrl);
-                imgTag = `<img src="${imgUrl}" class="log-thumb" alt="운동 사진" onclick="openModal('${imgUrl}')">`;
-              }
-
-              contentHtml += `
-                <li>
-                  <div class="log-item-left">
-                    ${imgTag}
-                    <div class="log-text-group">
-                      <div><span class="date-tag">[${dateLabel}]</span>${exerciseName}</div>
-                      <div style="color: #bbb; font-size: 11px;">${detailText}</div>
-                    </div>
-                  </div>
-                  <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
-                </li>
-              `;
-            });
-            contentHtml += '</ul>';
-          }
-
-          box.innerHTML = contentHtml;
-          container.appendChild(box);
-        });
+        renderLogBoxes(logs);
       };
+
+      getAllReq.onerror = function() {
+        useFallback = true;
+        loadLogs();
+      };
+    }
+
+    function renderLogBoxes(logs) {
+      const container = document.getElementById('logBoxesContainer');
+      container.innerHTML = '';
+
+      categories.forEach(cat => {
+        const catLogs = logs.filter(log => log.category === cat.name);
+
+        const box = document.createElement('div');
+        box.className = 'category-box';
+
+        let contentHtml = `<div class="category-title">${cat.name}</div>`;
+
+        if (catLogs.length === 0) {
+          contentHtml += `<p class="empty-text">기록 없음</p>`;
+        } else {
+          contentHtml += '<ul>';
+          catLogs.forEach(item => {
+            const detailText = item.isCardio 
+              ? `${item.time}분·${item.calories}kcal`
+              : `${item.weight}kg × ${item.reps}회`;
+            
+            const dateLabel = item.dateStr || getTodayFormatted();
+            
+            const exerciseName = item.exercise 
+              ? `<strong>${item.exercise}</strong>` 
+              : `<span style="color:#aaa;">(사진 기록)</span>`;
+
+            let imgTag = '';
+            if (item.imageBlob) {
+              const imgUrl = URL.createObjectURL(item.imageBlob);
+              activeObjectUrls.push(imgUrl);
+              imgTag = `<img src="${imgUrl}" class="log-thumb" alt="운동 사진" onclick="openModal('${imgUrl}')">`;
+            } else if (item.imageBase64) {
+              imgTag = `<img src="${item.imageBase64}" class="log-thumb" alt="운동 사진" onclick="openModal('${item.imageBase64}')">`;
+            }
+
+            contentHtml += `
+              <li>
+                <div class="log-item-left">
+                  ${imgTag}
+                  <div class="log-text-group">
+                    <div><span class="date-tag">[${dateLabel}]</span>${exerciseName}</div>
+                    <div style="color: #bbb; font-size: 11px;">${detailText}</div>
+                  </div>
+                </div>
+                <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
+              </li>
+            `;
+          });
+          contentHtml += '</ul>';
+        }
+
+        box.innerHTML = contentHtml;
+        container.appendChild(box);
+      });
     }
 
     function openModal(imgUrl) {
@@ -486,7 +562,14 @@
     }
 
     function deleteLog(id) {
-      if (!db) return;
+      if (!db || useFallback) {
+        let logs = getFallbackLogs();
+        logs = logs.filter(item => item.id !== id);
+        saveFallbackLogs(logs);
+        loadLogs();
+        return;
+      }
+
       const tx = db.transaction(["logs"], "readwrite");
       const store = tx.objectStore("logs");
       const delReq = store.delete(id);
@@ -496,91 +579,78 @@
       };
     }
 
-    function blobToBase64(blob) {
-      return new Promise((resolve, reject) => {
-        if (!blob) resolve(null);
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    }
-
-    function dataURLtoBlob(dataurl) {
-      if (!dataurl) return null;
-      const arr = dataurl.split(',');
-      const mime = arr[0].match(/:(.*?);/)[1];
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      return new Blob([u8arr], { type: mime });
-    }
-
     async function exportToShare() {
-      if (!db) {
-        alert("데이터베이스가 준비되지 않았습니다.");
+      let logs = [];
+      if (!db || useFallback) {
+        logs = getFallbackLogs();
+      } else {
+        logs = await new Promise((resolve) => {
+          const tx = db.transaction(["logs"], "readonly");
+          const store = tx.objectStore("logs");
+          const getAllReq = store.getAll();
+          getAllReq.onsuccess = () => resolve(getAllReq.result || []);
+        });
+      }
+
+      if (logs.length === 0) {
+        alert("백업할 운동 기록이 없습니다.");
         return;
       }
 
-      const tx = db.transaction(["logs"], "readonly");
-      const store = tx.objectStore("logs");
-      const getAllReq = store.getAll();
-
-      getAllReq.onsuccess = async function() {
-        const logs = getAllReq.result || [];
-        if (logs.length === 0) {
-          alert("백업할 운동 기록이 없습니다.");
-          return;
+      const exportLogs = await Promise.all(logs.map(async item => {
+        const itemCopy = { ...item };
+        if (itemCopy.imageBlob) {
+          itemCopy.imageBase64 = await blobToBase64(itemCopy.imageBlob);
+          delete itemCopy.imageBlob;
         }
+        delete itemCopy.id;
+        return itemCopy;
+      }));
 
-        const exportLogs = await Promise.all(logs.map(async item => {
-          const itemCopy = { ...item };
-          if (itemCopy.imageBlob) {
-            itemCopy.imageBase64 = await blobToBase64(itemCopy.imageBlob);
-            delete itemCopy.imageBlob;
-          }
-          delete itemCopy.id;
-          return itemCopy;
-        }));
+      const jsonText = JSON.stringify(exportLogs);
 
-        const jsonText = JSON.stringify(exportLogs);
-
-        if (navigator.share) {
-          try {
-            await navigator.share({
-              title: '헬스 메모장 백업 코드',
-              text: jsonText
-            });
-            return;
-          } catch (err) {}
-        }
-
+      if (navigator.share) {
         try {
-          await navigator.clipboard.writeText(jsonText);
-          alert("백업 코드가 클립보드에 복사되었습니다!\n메모장이나 카카오톡에 붙여넣어 두세요.");
-        } catch (e) {
-          prompt("아래 텍스트 전체를 복사해서 저장해 두세요:", jsonText);
-        }
-      };
+          await navigator.share({
+            title: '헬스 메모장 백업 코드',
+            text: jsonText
+          });
+          return;
+        } catch (err) {}
+      }
+
+      try {
+        await navigator.clipboard.writeText(jsonText);
+        alert("백업 코드가 클립보드에 복사되었습니다!\n메모장이나 카카오톡에 붙여넣어 두세요.");
+      } catch (e) {
+        prompt("아래 텍스트 전체를 복사해서 저장해 두세요:", jsonText);
+      }
     }
 
     function importFromText() {
-      if (!db) return;
-
       const codeInput = prompt("복사해둔 백업 코드를 아래에 붙여넣어 주세요:");
       if (!codeInput || !codeInput.trim()) return;
 
       try {
         const importedLogs = JSON.parse(codeInput.trim());
         if (!Array.isArray(importedLogs)) {
-          alert("올바르지 않은 백업 코드 형식을 입력하셨습니다.");
+          alert("올바르지 않은 백업 코드 형식입니다.");
           return;
         }
 
         if (!confirm(`총 ${importedLogs.length}개의 기록을 복원하시겠습니까?`)) {
+          return;
+        }
+
+        if (!db || useFallback) {
+          const currentLogs = getFallbackLogs();
+          for (const item of importedLogs) {
+            item.id = Date.now() + Math.random();
+            currentLogs.push(item);
+          }
+          saveFallbackLogs(currentLogs);
+          alert("기록이 성공적으로 복원되었습니다!");
+          loadLogs();
           return;
         }
 
