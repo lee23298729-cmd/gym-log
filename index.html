@@ -89,7 +89,7 @@
       overflow: hidden;
     }
 
-    /* 클릭 가능함을 보여주는 썸네일 스타일 */
+    /* 썸네일 스타일 */
     .log-thumb {
       width: 44px;
       height: 44px;
@@ -134,7 +134,7 @@
     .btn-delete:hover { background: #d32f2f; }
     .empty-text { color: #555; font-size: 13px; text-align: center; margin: auto 0; padding: 20px 0; }
 
-    /* 🔍 사진 확대 모달 (팝업) 스타일 */
+    /* 🔍 고화질 모달 (팝업) 스타일 */
     .image-modal {
       display: none;
       position: fixed;
@@ -142,7 +142,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.85);
+      background-color: rgba(0, 0, 0, 0.9);
       z-index: 1000;
       justify-content: center;
       align-items: center;
@@ -150,20 +150,19 @@
       box-sizing: border-box;
     }
     .image-modal img {
-      max-width: 90%;
-      max-height: 80vh;
-      border-radius: 12px;
+      max-width: 95%;
+      max-height: 85vh;
+      border-radius: 8px;
       box-shadow: 0 5px 25px rgba(0,0,0,0.8);
-      border: 1px solid #444;
       object-fit: contain;
     }
     .modal-hint {
       position: absolute;
-      bottom: 30px;
-      color: #aaa;
+      bottom: 25px;
+      color: #ccc;
       font-size: 13px;
-      background: rgba(0,0,0,0.6);
-      padding: 6px 14px;
+      background: rgba(0,0,0,0.7);
+      padding: 6px 16px;
       border-radius: 20px;
     }
   </style>
@@ -193,7 +192,7 @@
   <div class="section-title">📋 운동 기록 목록</div>
   <div id="logBoxesContainer"></div>
 
-  <!-- 3. 사진 확대 팝업 모달 -->
+  <!-- 3. 고화질 사진 확대 모달 -->
   <div id="imageModal" class="image-modal" onclick="closeModal()">
     <img id="modalImg" src="" alt="확대된 운동 사진">
     <div class="modal-hint">화면을 터치하면 닫힙니다</div>
@@ -282,6 +281,7 @@
       saveLogWithImage(file, logData);
     }
 
+    // 사진 고화질 리사이징 (최대 800px로 상향)
     function saveLogWithImage(file, logData) {
       logData.dateStr = getTodayFormatted();
 
@@ -293,7 +293,7 @@
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
-            const maxSize = 300;
+            const maxSize = 800; // 해상도 800px로 대폭 선명화
 
             if (width > height) {
               if (width > maxSize) {
@@ -312,7 +312,7 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            logData.image = canvas.toDataURL('image/jpeg', 0.7);
+            logData.image = canvas.toDataURL('image/jpeg', 0.8); // 선명도 향상
             commitLog(logData);
           };
           img.src = e.target.result;
@@ -369,7 +369,6 @@
               ? `<strong>${item.exercise}</strong>` 
               : `<span style="color:#aaa;">(사진 기록)</span>`;
 
-            // 클릭 시 openModalByIndex 함수 호출
             const imgTag = item.image 
               ? `<img src="${item.image}" class="log-thumb" alt="운동 사진" onclick="openModalByIndex(${item.originalIndex})">` 
               : '';
@@ -395,7 +394,6 @@
       });
     }
 
-    // 🔍 사진 확대 모달 관련 함수
     function openModalByIndex(index) {
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
       if (logs[index] && logs[index].image) {
