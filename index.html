@@ -42,11 +42,12 @@
       <option value="하체">🦵 하체</option>
       <option value="어깨">🛡️ 어깨</option>
       <option value="팔">💪 팔</option>
+      <option value="유산소">🏃‍♂️ 유산소</option>
     </select>
     
-    <input type="text" id="exercise" placeholder="운동 이름 (예: 벤치프레스)">
-    <input type="number" id="weight" placeholder="무게 (kg)">
-    <input type="number" id="reps" placeholder="횟수 (회)">
+    <input type="text" id="exercise" placeholder="운동 이름 (예: 천국의 계단, 벤치프레스)">
+    <input type="number" id="weight" placeholder="무게 (kg) 또는 강도">
+    <input type="number" id="reps" placeholder="횟수 (회) 또는 시간 (분)">
     <button class="btn-add" onclick="addLog()">기록 저장하기</button>
   </div>
 
@@ -54,7 +55,8 @@
   <div id="logContainer"></div>
 
   <script>
-    const categories = ['가슴', '등', '하체', '어깨', '팔'];
+    // 카테고리 목록에 '유산소' 추가
+    const categories = ['가슴', '등', '하체', '어깨', '팔', '유산소'];
 
     function getEmoji(category) {
       switch(category) {
@@ -63,6 +65,7 @@
         case '하체': return '🦵';
         case '어깨': return '🛡️';
         case '팔': return '💪';
+        case '유산소': return '🏃‍♂️';
         default: return '📌';
       }
     }
@@ -90,7 +93,7 @@
           catLogs.forEach(item => {
             html += `
               <li>
-                <span><strong>${item.exercise}</strong>: ${item.weight}kg × ${item.reps}회</span>
+                <span><strong>${item.exercise}</strong>: ${item.weight}kg/level × ${item.reps}회/분</span>
                 <button class="btn-delete" onclick="deleteLog(${item.originalIndex})">삭제</button>
               </li>
             `;
