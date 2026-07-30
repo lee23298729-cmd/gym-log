@@ -265,41 +265,6 @@
       { name: '유산소', example: '천국의 계단' }
     ];
 
-    let db = null;
-    let useFallback = false;
-
-    function initDB() {
-      if (!window.indexedDB) {
-        useFallback = true;
-        loadLogs();
-        return;
-      }
-
-      try {
-        const dbReq = indexedDB.open("GymLogDB", 1);
-
-        dbReq.onupgradeneeded = function(e) {
-          db = e.target.result;
-          if (!db.objectStoreNames.contains("logs")) {
-            db.createObjectStore("logs", { keyPath: "id", autoIncrement: true });
-          }
-        };
-
-        dbReq.onsuccess = function(e) {
-          db = e.target.result;
-          loadLogs();
-        };
-
-        dbReq.onerror = function() {
-          useFallback = true;
-          loadLogs();
-        };
-      } catch (err) {
-        useFallback = true;
-        loadLogs();
-      }
-    }
-
     function getTodayFormatted() {
       const today = new Date();
       return `${today.getMonth() + 1}/${today.getDate()}`;
@@ -350,37 +315,37 @@
       `;
     }
 
-    // 모바일 사진 용량 초과 방지용 자동 이미지 압축 함수 (해상도 줄이고 경량화)
-    function compressImageToDataURL(file, maxWidth = 600, maxHeight = 600, quality = 0.6) {
+    // 이미지를 아주 가볍게 압축하는 함수
+    function compressImage(file) {
       return new Promise((resolve) => {
         if (!file) return resolve(null);
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = function(e) {
           const img = new Image();
-          img.onload = () => {
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 400;
+            const MAX_HEIGHT = 400;
             let width = img.width;
             let height = img.height;
 
             if (width > height) {
-              if (width > maxWidth) {
-                height = Math.round((height * maxWidth) / width);
-                width = maxWidth;
+              if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
               }
             } else {
-              if (height > maxHeight) {
-                width = Math.round((width * maxHeight) / height);
-                height = maxHeight;
+              if (height > MAX_HEIGHT) {
+                width = Math.round((width * MAX_HEIGHT) / height);
+                height = MAX_HEIGHT;
               }
             }
 
-            const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-
-            const dataUrl = canvas.toDataURL('image/jpeg', quality);
-            resolve(dataUrl);
+            resolve(canvas.toDataURL('image/jpeg', 0.5));
           };
           img.onerror = () => resolve(null);
           img.src = e.target.result;
@@ -390,20 +355,20 @@
       });
     }
 
-    function getFallbackLogs() {
+    function getLogs() {
       try {
-        return JSON.parse(localStorage.getItem('gym_logs_fallback') || '[]');
+        return JSON.parse(localStorage.getItem('gym_logs_v2') || '[]');
       } catch (e) {
         return [];
       }
     }
 
-    function saveFallbackLogs(logs) {
+    function saveLogs(logs) {
       try {
-        localStorage.setItem('gym_logs_fallback', JSON.stringify(logs));
+        localStorage.setItem('gym_logs_v2', JSON.stringify(logs));
         return true;
       } catch (e) {
-        alert("저장 용량이 완전히 꽉 찼습니다. 오래된 사진 기록을 몇 개 삭제 후 다시 시도해 주세요.");
+        alert("저장 공간이 부족합니다. 백업 코드로 백업 후 오래된 기록을 삭제해 주세요.");
         return false;
       }
     }
@@ -413,115 +378,71 @@
       saveBtn.innerText = "저장 중...";
       saveBtn.disabled = true;
 
-      const category = document.getElementById('category').value;
-      const exercise = document.getElementById('exercise').value.trim();
-      const imgInput = document.getElementById('exerciseImg');
-      const file = imgInput && imgInput.files[0] ? imgInput.files[0] : null;
+      try {
+        const category = document.getElementById('category').value;
+        const exercise = document.getElementById('exercise').value.trim();
+        const imgInput = document.getElementById('exerciseImg');
+        const file = imgInput && imgInput.files[0] ? imgInput.files[0] : null;
 
-      if (!exercise && !file) {
-        alert('운동 이름이나 사진 중 하나는 등록해 주세요!');
-        saveBtn.innerText = "기록 저장하기";
-        saveBtn.disabled = false;
-        return;
-      }
-
-      // 모바일 사진 압축 실행
-      const compressedImgBase64 = file ? await compressImageToDataURL(file) : null;
-
-      const logData = { 
-        id: Date.now(),
-        category, 
-        exercise,
-        dateStr: getTodayFormatted(),
-        imageBase64: compressedImgBase64
-      };
-
-      if (category === '유산소') {
-        const time = document.getElementById('time').value.trim();
-        const calories = document.getElementById('calories').value.trim();
-
-        if (!time || !calories) {
-          alert('운동 시간과 소모 칼로리를 모두 입력해주세요!');
-          saveBtn.innerText = "기록 저장하기";
-          saveBtn.disabled = false;
+        if (!exercise && !file) {
+          alert('운동 이름이나 사진 중 하나는 등록해 주세요!');
           return;
         }
-        logData.time = time;
-        logData.calories = calories;
-        logData.isCardio = true;
-      } else {
-        const weight = document.getElementById('weight').value.trim();
-        const reps = document.getElementById('reps').value.trim();
 
-        if (!weight || !reps) {
-          alert('무게와 횟수를 모두 입력해주세요!');
-          saveBtn.innerText = "기록 저장하기";
-          saveBtn.disabled = false;
-          return;
+        let imageBase64 = null;
+        if (file) {
+          imageBase64 = await compressImage(file);
         }
-        logData.weight = weight;
-        logData.reps = reps;
-        logData.isCardio = false;
-      }
 
-      if (!db || useFallback) {
-        const currentLogs = getFallbackLogs();
+        const logData = { 
+          id: Date.now(),
+          category, 
+          exercise,
+          dateStr: getTodayFormatted(),
+          imageBase64
+        };
+
+        if (category === '유산소') {
+          const time = document.getElementById('time').value.trim();
+          const calories = document.getElementById('calories').value.trim();
+
+          if (!time || !calories) {
+            alert('운동 시간과 소모 칼로리를 모두 입력해주세요!');
+            return;
+          }
+          logData.time = time;
+          logData.calories = calories;
+          logData.isCardio = true;
+        } else {
+          const weight = document.getElementById('weight').value.trim();
+          const reps = document.getElementById('reps').value.trim();
+
+          if (!weight || !reps) {
+            alert('무게와 횟수를 모두 입력해주세요!');
+            return;
+          }
+          logData.weight = weight;
+          logData.reps = reps;
+          logData.isCardio = false;
+        }
+
+        const currentLogs = getLogs();
         currentLogs.push(logData);
-        if (saveFallbackLogs(currentLogs)) {
+        
+        if (saveLogs(currentLogs)) {
           renderInputFields();
           loadLogs();
         }
+      } catch (err) {
+        alert("저장 중 오류가 발생했습니다.");
+      } finally {
         saveBtn.innerText = "기록 저장하기";
         saveBtn.disabled = false;
-        return;
       }
-
-      const tx = db.transaction(["logs"], "readwrite");
-      const store = tx.objectStore("logs");
-      const addReq = store.add(logData);
-
-      addReq.onsuccess = function() {
-        renderInputFields();
-        loadLogs();
-        saveBtn.innerText = "기록 저장하기";
-        saveBtn.disabled = false;
-      };
-
-      addReq.onerror = function() {
-        useFallback = true;
-        const currentLogs = getFallbackLogs();
-        currentLogs.push(logData);
-        saveFallbackLogs(currentLogs);
-        renderInputFields();
-        loadLogs();
-        saveBtn.innerText = "기록 저장하기";
-        saveBtn.disabled = false;
-      };
     }
 
     function loadLogs() {
-      if (!db || useFallback) {
-        const logs = getFallbackLogs();
-        renderLogBoxes(logs);
-        return;
-      }
-
-      const tx = db.transaction(["logs"], "readonly");
-      const store = tx.objectStore("logs");
-      const getAllReq = store.getAll();
-
-      getAllReq.onsuccess = function() {
-        const logs = getAllReq.result || [];
-        renderLogBoxes(logs);
-      };
-
-      getAllReq.onerror = function() {
-        useFallback = true;
-        loadLogs();
-      };
-    }
-
-    function renderLogBoxes(logs) {
+      const logs = getLogs();
       const container = document.getElementById('logBoxesContainer');
       container.innerHTML = '';
 
@@ -584,36 +505,14 @@
     }
 
     function deleteLog(id) {
-      if (!db || useFallback) {
-        let logs = getFallbackLogs();
-        logs = logs.filter(item => item.id !== id);
-        saveFallbackLogs(logs);
-        loadLogs();
-        return;
-      }
-
-      const tx = db.transaction(["logs"], "readwrite");
-      const store = tx.objectStore("logs");
-      const delReq = store.delete(id);
-
-      delReq.onsuccess = function() {
-        loadLogs();
-      };
+      let logs = getLogs();
+      logs = logs.filter(item => item.id !== id);
+      saveLogs(logs);
+      loadLogs();
     }
 
     async function exportToShare() {
-      let logs = [];
-      if (!db || useFallback) {
-        logs = getFallbackLogs();
-      } else {
-        logs = await new Promise((resolve) => {
-          const tx = db.transaction(["logs"], "readonly");
-          const store = tx.objectStore("logs");
-          const getAllReq = store.getAll();
-          getAllReq.onsuccess = () => resolve(getAllReq.result || []);
-        });
-      }
-
+      const logs = getLogs();
       if (logs.length === 0) {
         alert("백업할 운동 기록이 없습니다.");
         return;
@@ -654,38 +553,23 @@
           return;
         }
 
-        if (!db || useFallback) {
-          const currentLogs = getFallbackLogs();
-          for (const item of importedLogs) {
-            item.id = Date.now() + Math.random();
-            currentLogs.push(item);
-          }
-          saveFallbackLogs(currentLogs);
-          alert("기록이 성공적으로 복원되었습니다!");
-          loadLogs();
-          return;
-        }
-
-        const tx = db.transaction(["logs"], "readwrite");
-        const store = tx.objectStore("logs");
-
+        const currentLogs = getLogs();
         for (const item of importedLogs) {
-          const logData = { ...item };
-          delete logData.id;
-          store.add(logData);
+          item.id = Date.now() + Math.random();
+          currentLogs.push(item);
         }
-
-        tx.oncomplete = function() {
+        
+        if (saveLogs(currentLogs)) {
           alert("기록이 성공적으로 복원되었습니다!");
           loadLogs();
-        };
+        }
       } catch (err) {
         alert("백업 코드를 읽는 중 오류가 발생했습니다.");
       }
     }
 
     renderInputFields();
-    initDB();
+    loadLogs();
   </script>
 </body>
 </html>
