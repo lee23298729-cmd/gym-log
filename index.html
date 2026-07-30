@@ -5,95 +5,127 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>나의 헬스 증량 메모장</title>
   <style>
-    body { font-family: sans-serif; background-color: #121212; color: #fff; padding: 20px; max-width: 500px; margin: 0 auto; }
-    h1 { text-align: center; color: #4caf50; margin-bottom: 20px; }
+    body { font-family: sans-serif; background-color: #121212; color: #fff; padding: 12px; max-width: 500px; margin: 0 auto; }
+    h1 { text-align: center; color: #4caf50; font-size: 18px; margin: 0 0 10px 0; }
     
     .section-title { 
-      font-size: 18px; 
+      font-size: 15px; 
       color: #fff; 
-      margin-top: 25px; 
-      margin-bottom: 12px; 
+      margin-top: 12px; 
+      margin-bottom: 8px; 
+      font-weight: bold;
     }
 
-    /* 상단 입력 카드 */
-    .input-card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #333; }
-    .input-card label { display: block; font-size: 14px; color: #aaa; margin-top: 10px; margin-bottom: 4px; }
+    /* 슬림화된 상단 입력 카드 */
+    .input-card { 
+      background: #1e1e1e; 
+      padding: 12px; 
+      border-radius: 10px; 
+      margin-bottom: 10px; 
+      border: 1px solid #333; 
+    }
     
-    input, select, button { width: 100%; padding: 12px; margin-top: 4px; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; font-size: 15px; }
+    label { display: block; font-size: 12px; color: #aaa; margin-bottom: 2px; }
+    
+    input, select, button { 
+      width: 100%; 
+      padding: 8px 10px; 
+      border-radius: 6px; 
+      border: 1px solid #333; 
+      box-sizing: border-box; 
+      font-size: 13px; 
+    }
     input, select { background: #2c2c2c; color: #fff; }
-    input[type="file"] { padding: 8px; font-size: 13px; color: #ccc; cursor: pointer; }
+    input[type="file"] { padding: 5px; font-size: 11px; color: #ccc; cursor: pointer; }
     input::placeholder { color: #777; }
     
-    button.btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; cursor: pointer; margin-top: 18px; font-size: 16px; }
+    /* 2열 배치 레이아웃 */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .input-col {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    button.btn-add { 
+      background: #4caf50; 
+      color: #fff; 
+      font-weight: bold; 
+      border: none; 
+      cursor: pointer; 
+      margin-top: 10px; 
+      font-size: 14px; 
+      padding: 10px;
+    }
     button.btn-add:active { background: #388e3c; }
 
     /* 가로 배치 컨테이너 */
     #logBoxesContainer {
       display: flex;
       flex-direction: row;
-      gap: 12px;
+      gap: 10px;
       overflow-x: auto;
-      padding-bottom: 12px;
+      padding-bottom: 8px;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
     }
 
-    #logBoxesContainer::-webkit-scrollbar { height: 6px; }
-    #logBoxesContainer::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 3px; }
+    #logBoxesContainer::-webkit-scrollbar { height: 4px; }
+    #logBoxesContainer::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 2px; }
     #logBoxesContainer::-webkit-scrollbar-track { background: #2c2c2c; }
 
     /* 부위별 칸 상자 */
     .category-box {
-      flex: 0 0 260px;
+      flex: 0 0 240px;
       scroll-snap-align: start;
       background: #1e1e1e;
       border: 1px solid #2d2d2d;
-      border-radius: 10px;
-      padding: 15px;
+      border-radius: 8px;
+      padding: 12px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 200px;
+      min-height: 180px;
     }
     
     .category-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       color: #4caf50;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      margin-bottom: 8px;
       border-bottom: 1px solid #333;
-      padding-bottom: 6px;
+      padding-bottom: 4px;
     }
 
     ul { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
     li { 
       background: #2c2c2c; 
-      padding: 8px 10px; 
+      padding: 6px 8px; 
       border-radius: 6px; 
-      margin-bottom: 8px; 
+      margin-bottom: 6px; 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      font-size: 13px; 
+      font-size: 12px; 
     }
     li:last-child { margin-bottom: 0; }
 
     .log-item-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       overflow: hidden;
     }
 
     .log-thumb {
-      width: 44px;
-      height: 44px;
+      width: 38px;
+      height: 38px;
       object-fit: cover;
-      border-radius: 6px;
+      border-radius: 4px;
       border: 1px solid #555;
       flex-shrink: 0;
       cursor: pointer;
@@ -102,14 +134,14 @@
     .log-text-group {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
       overflow: hidden;
     }
 
     .date-tag {
       color: #888;
-      font-size: 11px;
-      margin-right: 4px;
+      font-size: 10px;
+      margin-right: 3px;
       font-weight: normal;
     }
 
@@ -117,16 +149,16 @@
       background: #e53935; 
       color: #fff; 
       border: none; 
-      padding: 4px 8px; 
+      padding: 3px 6px; 
       border-radius: 4px; 
       cursor: pointer; 
-      font-size: 11px; 
+      font-size: 10px; 
       width: auto;
       margin-top: 0;
-      margin-left: 6px;
+      margin-left: 4px;
       flex-shrink: 0;
     }
-    .empty-text { color: #555; font-size: 13px; text-align: center; margin: auto 0; padding: 20px 0; }
+    .empty-text { color: #555; font-size: 12px; text-align: center; margin: auto 0; padding: 15px 0; }
 
     /* 사진 원본 확대 모달 */
     .image-modal {
@@ -154,9 +186,9 @@
       position: absolute;
       bottom: 25px;
       color: #ccc;
-      font-size: 13px;
+      font-size: 12px;
       background: rgba(0,0,0,0.7);
-      padding: 6px 16px;
+      padding: 4px 12px;
       border-radius: 20px;
     }
   </style>
@@ -166,7 +198,7 @@
   <h1>헬스 증량 메모장</h1>
 
   <div class="input-card">
-    <label for="category" style="margin-top:0;">운동 부위 선택</label>
+    <label for="category">운동 부위 선택</label>
     <select id="category" onchange="renderInputFields()">
       <option value="가슴">가슴</option>
       <option value="등">등</option>
@@ -191,12 +223,12 @@
 
   <script>
     const categories = [
-      { name: '가슴', example: 'Bench Press, 벤치프레스' },
-      { name: '등', example: 'Lat Pulldown, 렛풀다운' },
-      { name: '하체', example: 'Squat, 스쿼트' },
-      { name: '어깨', example: 'Shoulder Press, 숄더프레스' },
-      { name: '팔', example: 'Biceps Curl, 바벨컬' },
-      { name: '유산소', example: 'Treadmill, 천국의 계단' }
+      { name: '가슴', example: '벤치프레스' },
+      { name: '등', example: '렛풀다운' },
+      { name: '하체', example: '스쿼트' },
+      { name: '어깨', example: '숄더프레스' },
+      { name: '팔', example: '바벨컬' },
+      { name: '유산소', example: '천국의 계단' }
     ];
 
     let db = null;
@@ -240,27 +272,41 @@
       const container = document.getElementById('dynamicInputs');
       const currentCat = categories.find(c => c.name === categoryVal) || categories[0];
 
-      let commonHtml = `
-        <label>운동 이름 (선택)</label>
-        <input type="text" id="exercise" placeholder="예: ${currentCat.example}" autocomplete="off">
-        
-        <label>운동 사진 첨부 (고화질 원본 저장 가능)</label>
-        <input type="file" id="exerciseImg" accept="image/*">
-      `;
+      const isCardio = (categoryVal === '유산소');
 
-      if (categoryVal === '유산소') {
-        container.innerHTML = commonHtml + `
-          <label>운동 측정</label>
-          <input type="number" id="time" placeholder="운동 시간 (분)">
-          <input type="number" id="calories" placeholder="소모 칼로리 (kcal)">
-        `;
-      } else {
-        container.innerHTML = commonHtml + `
-          <label>무게 및 횟수</label>
-          <input type="number" id="weight" placeholder="무게 (kg)">
-          <input type="number" id="reps" placeholder="횟수 (회)">
-        `;
-      }
+      container.innerHTML = `
+        <div class="input-row">
+          <div class="input-col">
+            <label>운동 이름</label>
+            <input type="text" id="exercise" placeholder="예: ${currentCat.example}" autocomplete="off">
+          </div>
+          <div class="input-col">
+            <label>사진 첨부</label>
+            <input type="file" id="exerciseImg" accept="image/*">
+          </div>
+        </div>
+        <div class="input-row">
+          ${isCardio ? `
+            <div class="input-col">
+              <label>운동 시간 (분)</label>
+              <input type="number" id="time" placeholder="분">
+            </div>
+            <div class="input-col">
+              <label>소모 칼로리 (kcal)</label>
+              <input type="number" id="calories" placeholder="kcal">
+            </div>
+          ` : `
+            <div class="input-col">
+              <label>무게 (kg)</label>
+              <input type="number" id="weight" placeholder="kg">
+            </div>
+            <div class="input-col">
+              <label>횟수 (회)</label>
+              <input type="number" id="reps" placeholder="회">
+            </div>
+          `}
+        </div>
+      `;
     }
 
     function addLog() {
@@ -377,7 +423,7 @@
                     ${imgTag}
                     <div class="log-text-group">
                       <div><span class="date-tag">[${dateLabel}]</span>${exerciseName}</div>
-                      <div style="color: #bbb; font-size: 12px;">${detailText}</div>
+                      <div style="color: #bbb; font-size: 11px;">${detailText}</div>
                     </div>
                   </div>
                   <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
