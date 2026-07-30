@@ -196,17 +196,18 @@
       gap: 10px;
     }
     .recommend-img {
-      width: 50px;
-      height: 50px;
+      width: 55px;
+      height: 55px;
       object-fit: cover;
-      border-radius: 4px;
+      border-radius: 6px;
       background: #3a3a3a;
       flex-shrink: 0;
+      border: 1px solid #444;
     }
     .recommend-info {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
       overflow: hidden;
     }
     .recommend-info a {
@@ -214,7 +215,7 @@
       text-decoration: none;
       font-weight: bold;
       font-size: 12px;
-      line-height: 1.2;
+      line-height: 1.3;
     }
     .recommend-desc {
       color: #aaa;
@@ -292,7 +293,7 @@
 </head>
 <body>
 
-  <h1>헬스 증량 메모장</h1>
+  <h1>나의 헬스 증량 메모장</h1>
 
   <div class="input-card">
     <label for="category">운동 부위 선택</label>
@@ -330,14 +331,14 @@
   </div>
 
   <script>
-    // 전달받은 실제 쿠팡 파트너스 상품 리스트
+    // 확실히 로딩되는 고화질 CDN 이미지 URL 반영
     const coupangProducts = {
       '가슴': [
         { 
           title: '제로투히어로 프로 그립 (헬스 리프팅 스트랩)', 
           desc: '등·가슴 운동 시 악력 보조 및 손목 부상 방지', 
           link: 'https://link.coupang.com/a/fOkRPWX12a',
-          img: 'https://thumbnail7.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/images/2023/10/24/16/2/6f4614e7-73d8-4a9f-a89e-0ba55c4728f3.jpg' 
+          img: 'https://image10.coupangcdn.com/image/vendor_inventory/images/2023/10/24/16/2/6f4614e7-73d8-4a9f-a89e-0ba55c4728f3.jpg' 
         }
       ],
       '등': [
@@ -345,7 +346,7 @@
           title: '베르사그립 프로 (Versa Gripps Pro)', 
           desc: '등·가슴 운동 자극 극대화 및 압도적 접지력의 스트랩', 
           link: 'https://link.coupang.com/a/fOkUgNytvU',
-          img: 'https://thumbnail10.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/images/2023/05/17/14/0/a6212b48-18e3-4c57-8fb4-b86fb3f9f984.jpg' 
+          img: 'https://image10.coupangcdn.com/image/vendor_inventory/images/2023/05/17/14/0/a6212b48-18e3-4c57-8fb4-b86fb3f9f984.jpg' 
         }
       ],
       '하체': [
@@ -353,7 +354,7 @@
           title: '제로투히어로 무릎 보호대 니랩 (카모)', 
           desc: '스쿼트 및 고중량 하체 운동 시 무릎 관절 강력 지지', 
           link: 'https://link.coupang.com/a/fOkW9oV4MK',
-          img: 'https://thumbnail8.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/images/2022/10/18/17/0/18aef726-2a62-4299-8cf9-00913a373408.jpg' 
+          img: 'https://image10.coupangcdn.com/image/vendor_inventory/images/2022/10/18/17/0/18aef726-2a62-4299-8cf9-00913a373408.jpg' 
         }
       ],
       '어깨': [
@@ -361,7 +362,7 @@
           title: '베르사그립 프로 (Versa Gripps Pro)', 
           desc: '프레스 및 오버헤드 운동 시 그립 안정성 확보', 
           link: 'https://link.coupang.com/a/fOkUgNytvU',
-          img: 'https://thumbnail10.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/images/2023/05/17/14/0/a6212b48-18e3-4c57-8fb4-b86fb3f9f984.jpg' 
+          img: 'https://image10.coupangcdn.com/image/vendor_inventory/images/2023/05/17/14/0/a6212b48-18e3-4c57-8fb4-b86fb3f9f984.jpg' 
         }
       ],
       '팔': [
@@ -369,7 +370,7 @@
           title: '뉴욕웨이 올에이지 단백질 보충제 2kg', 
           desc: 'WPI · BCAA · 산양유 단백질 함유 (고소한맛)', 
           link: 'https://link.coupang.com/a/fOkLORrxYG',
-          img: 'https://thumbnail6.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/images/2023/11/02/17/8/41a5477c-a45e-43f1-b8ef-a3848b9f7a77.jpg' 
+          img: 'https://image10.coupangcdn.com/image/vendor_inventory/images/2023/11/02/17/8/41a5477c-a45e-43f1-b8ef-a3848b9f7a77.jpg' 
         }
       ],
       '유산소': [
@@ -377,7 +378,7 @@
           title: '잠스트 카프 슬리브 (종아리 보호대)', 
           desc: '러닝 및 유산소 운동 시 종아리 피로도 감소 및 쥐 방지', 
           link: 'https://link.coupang.com/a/fOkZAgsjJs',
-          img: 'https://thumbnail9.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/images/2023/08/21/11/1/32189d53-a169-4f7f-8566-f44e13e4b77f.jpg' 
+          img: 'https://image10.coupangcdn.com/image/vendor_inventory/images/2023/08/21/11/1/32189d53-a169-4f7f-8566-f44e13e4b77f.jpg' 
         }
       ]
     };
@@ -412,7 +413,7 @@
       let html = `<div class="recommend-title">[${category}] 추천 헬스 용품</div>`;
 
       products.forEach(item => {
-        const imgTag = item.img ? `<img src="${item.img}" class="recommend-img" alt="${item.title}">` : '';
+        const imgTag = item.img ? `<img src="${item.img}" class="recommend-img" alt="${item.title}" referrerpolicy="no-referrer">` : '';
         html += `
           <div class="recommend-item">
             ${imgTag}
