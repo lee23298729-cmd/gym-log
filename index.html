@@ -10,9 +10,11 @@
     .card { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     input, button { width: 100%; padding: 12px; margin-top: 8px; border-radius: 5px; border: none; box-sizing: border-box; font-size: 16px; }
     input { background: #2c2c2c; color: #fff; }
-    button { background: #4caf50; color: #fff; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    button.btn-add { background: #4caf50; color: #fff; font-weight: bold; cursor: pointer; margin-top: 15px; }
     ul { list-style: none; padding: 0; }
-    li { background: #2c2c2c; padding: 12px; border-radius: 5px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    li { background: #2c2c2c; padding: 12px; border-radius: 5px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-delete { background: #e53935; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; width: auto; margin-top: 0; }
+    .btn-delete:hover { background: #d32f2f; }
   </style>
 </head>
 <body>
@@ -23,7 +25,7 @@
     <input type="text" id="exercise" placeholder="운동 이름 (예: 벤치프레스)">
     <input type="number" id="weight" placeholder="무게 (kg)">
     <input type="number" id="reps" placeholder="횟수 (회)">
-    <button onclick="addLog()">기록 저장하기</button>
+    <button class="btn-add" onclick="addLog()">기록 저장하기</button>
   </div>
 
   <h2>📋 오늘 기록한 운동</h2>
@@ -34,9 +36,12 @@
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
       const list = document.getElementById('logList');
       list.innerHTML = '';
-      logs.forEach(log => {
+      logs.forEach((log, index) => {
         const li = document.createElement('li');
-        li.innerHTML = `<span><strong>${log.exercise}</strong>: ${log.weight}kg × ${log.reps}회</span>`;
+        li.innerHTML = `
+          <span><strong>${log.exercise}</strong>: ${log.weight}kg × ${log.reps}회</span>
+          <button class="btn-delete" onclick="deleteLog(${index})">삭제</button>
+        `;
         list.appendChild(li);
       });
     }
@@ -59,6 +64,13 @@
       document.getElementById('weight').value = '';
       document.getElementById('reps').value = '';
 
+      loadLogs();
+    }
+
+    function deleteLog(index) {
+      const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
+      logs.splice(index, 1);
+      localStorage.setItem('gymLogs', JSON.stringify(logs));
       loadLogs();
     }
 
