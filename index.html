@@ -89,7 +89,6 @@
       overflow: hidden;
     }
 
-    /* 썸네일 스타일 */
     .log-thumb {
       width: 44px;
       height: 44px;
@@ -134,7 +133,7 @@
     .btn-delete:hover { background: #d32f2f; }
     .empty-text { color: #555; font-size: 13px; text-align: center; margin: auto 0; padding: 20px 0; }
 
-    /* 🔍 고화질 모달 (팝업) 스타일 */
+    /* 🔍 사진 확대 모달 */
     .image-modal {
       display: none;
       position: fixed;
@@ -171,7 +170,6 @@
 
   <h1>💪 헬스 증량 메모장</h1>
 
-  <!-- 1. 운동 기록 입력 섹션 -->
   <div class="input-card">
     <label for="category" style="margin-top:0;">운동 부위 선택</label>
     <select id="category" onchange="renderInputFields()">
@@ -188,11 +186,9 @@
     <button class="btn-add" onclick="addLog()">기록 저장하기</button>
   </div>
 
-  <!-- 2. 가로로 놓인 부위별 칸 -->
   <div class="section-title">📋 운동 기록 목록</div>
   <div id="logBoxesContainer"></div>
 
-  <!-- 3. 고화질 사진 확대 모달 -->
   <div id="imageModal" class="image-modal" onclick="closeModal()">
     <img id="modalImg" src="" alt="확대된 운동 사진">
     <div class="modal-hint">화면을 터치하면 닫힙니다</div>
@@ -245,7 +241,7 @@
       const category = document.getElementById('category').value;
       const exercise = document.getElementById('exercise').value.trim();
       const imgInput = document.getElementById('exerciseImg');
-      const file = imgInput.files[0];
+      const file = imgInput ? imgInput.files[0] : null;
 
       if (!exercise && !file) {
         alert('운동 이름이나 사진 중 하나는 등록해 주세요!');
@@ -281,38 +277,58 @@
       saveLogWithImage(file, logData);
     }
 
-    // 사진 고화질 리사이징 (최대 800px로 상향)
+    // 모바일 최적화 및 에러 핸들링 보완
     function saveLogWithImage(file, logData) {
       logData.dateStr = getTodayFormatted();
 
       if (file) {
         const reader = new FileReader();
+        
+        reader.onerror = function() {
+          alert('사진 읽기에 실패했습니다. 사진 없이 저장합니다.');
+          logData.image = null;
+          commitLog(logData);
+        };
+
         reader.onload = function(e) {
           const img = new Image();
+          
+          img.onerror = function() {
+            alert('이미지를 로드할 수 없습니다. 사진 없이 저장합니다.');
+            logData.image = null;
+            commitLog(logData);
+          };
+
           img.onload = function() {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            const maxSize = 800; // 해상도 800px로 대폭 선명화
+            try {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const maxSize = 500; // 모바일 화면에 최적화된 500px
 
-            if (width > height) {
-              if (width > maxSize) {
-                height *= maxSize / width;
-                width = maxSize;
+              if (width > height) {
+                if (width > maxSize) {
+                  height *= maxSize / width;
+                  width = maxSize;
+                }
+              } else {
+                if (height > maxSize) {
+                  width *= maxSize / height;
+                  height = maxSize;
+                }
               }
-            } else {
-              if (height > maxSize) {
-                width *= maxSize / height;
-                height = maxSize;
-              }
+              canvas.width = width;
+              canvas.height = height;
+
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+
+              // 압축률 0.6으로 설정해 저장 용량을 획기적으로 줄임
+              logData.image = canvas.toDataURL('image/jpeg', 0.6);
+            } catch (err) {
+              console.error(err);
+              logData.image = null;
             }
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            logData.image = canvas.toDataURL('image/jpeg', 0.8); // 선명도 향상
             commitLog(logData);
           };
           img.src = e.target.result;
@@ -330,8 +346,9 @@
       
       try {
         localStorage.setItem('gymLogs', JSON.stringify(logs));
+        alert('저장되었습니다!');
       } catch (e) {
-        alert('저장 공간이 부족합니다. 이전 기록이나 사진을 삭제해 주세요.');
+        alert('저장 공간(5MB)이 초과되었습니다. 이전 기록이나 사진을 몇 개 삭제 후 다시 시도해주세요.');
         return;
       }
 
