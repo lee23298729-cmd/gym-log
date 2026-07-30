@@ -27,7 +27,7 @@
     button.btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; cursor: pointer; margin-top: 18px; font-size: 16px; }
     button.btn-add:hover { background: #45a049; }
 
-    /* 가로 배치 컨테이너 (옆으로 스크롤 가능) */
+    /* 가로 배치 컨테이너 */
     #logBoxesContainer {
       display: flex;
       flex-direction: row;
@@ -38,14 +38,13 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* 스크롤바 스타일 */
     #logBoxesContainer::-webkit-scrollbar { height: 6px; }
     #logBoxesContainer::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 3px; }
     #logBoxesContainer::-webkit-scrollbar-track { background: #2c2c2c; }
 
-    /* 가로로 놓이는 부위별 칸 상자 */
+    /* 부위별 칸 상자 */
     .category-box {
-      flex: 0 0 260px; /* 박스 가로 크기 지정 */
+      flex: 0 0 260px;
       scroll-snap-align: start;
       background: #1e1e1e;
       border: 1px solid #2d2d2d;
@@ -90,14 +89,19 @@
       overflow: hidden;
     }
 
-    /* 기록된 사진 썸네일 */
+    /* 클릭 가능함을 보여주는 썸네일 스타일 */
     .log-thumb {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       object-fit: cover;
       border-radius: 6px;
-      border: 1px solid #444;
+      border: 1px solid #555;
       flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.1s ease-in-out;
+    }
+    .log-thumb:active {
+      transform: scale(0.95);
     }
 
     .log-text-group {
@@ -129,6 +133,39 @@
     }
     .btn-delete:hover { background: #d32f2f; }
     .empty-text { color: #555; font-size: 13px; text-align: center; margin: auto 0; padding: 20px 0; }
+
+    /* 🔍 사진 확대 모달 (팝업) 스타일 */
+    .image-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .image-modal img {
+      max-width: 90%;
+      max-height: 80vh;
+      border-radius: 12px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.8);
+      border: 1px solid #444;
+      object-fit: contain;
+    }
+    .modal-hint {
+      position: absolute;
+      bottom: 30px;
+      color: #aaa;
+      font-size: 13px;
+      background: rgba(0,0,0,0.6);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
   </style>
 </head>
 <body>
@@ -156,6 +193,12 @@
   <div class="section-title">📋 운동 기록 목록</div>
   <div id="logBoxesContainer"></div>
 
+  <!-- 3. 사진 확대 팝업 모달 -->
+  <div id="imageModal" class="image-modal" onclick="closeModal()">
+    <img id="modalImg" src="" alt="확대된 운동 사진">
+    <div class="modal-hint">화면을 터치하면 닫힙니다</div>
+  </div>
+
   <script>
     const categories = [
       { name: '가슴', emoji: '🏋️‍♂️', example: 'Bench Press, 벤치프레스' },
@@ -171,7 +214,6 @@
       return `${today.getMonth() + 1}/${today.getDate()}`;
     }
 
-    // 선택 부위에 따른 입력창 생성 (이름/사진 선택사항)
     function renderInputFields() {
       const categoryVal = document.getElementById('category').value;
       const container = document.getElementById('dynamicInputs');
@@ -200,14 +242,12 @@
       }
     }
 
-    // 운동 기록 저장 로직
     function addLog() {
       const category = document.getElementById('category').value;
       const exercise = document.getElementById('exercise').value.trim();
       const imgInput = document.getElementById('exerciseImg');
       const file = imgInput.files[0];
 
-      // [검증] 이름도 없고 사진도 선택하지 않은 경우 방지
       if (!exercise && !file) {
         alert('운동 이름이나 사진 중 하나는 등록해 주세요!');
         return;
@@ -239,11 +279,9 @@
         logData.isCardio = false;
       }
 
-      // 사진 파일 처리 (이미지 압축 후 저장)
       saveLogWithImage(file, logData);
     }
 
-    // 이미지를 Canvas로 압축 후 localStorage 저장
     function saveLogWithImage(file, logData) {
       logData.dateStr = getTodayFormatted();
 
@@ -252,7 +290,6 @@
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
-            // 이미지 최적화 (최대 300px 크기로 리사이징)
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
@@ -275,7 +312,6 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            // 압축된 DataURL 추출 (JPG, 품질 0.7)
             logData.image = canvas.toDataURL('image/jpeg', 0.7);
             commitLog(logData);
           };
@@ -288,7 +324,6 @@
       }
     }
 
-    // 최종 저장 및 목록 새로고침
     function commitLog(logData) {
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
       logs.push(logData);
@@ -304,7 +339,6 @@
       loadLogs();
     }
 
-    // 기록 불러오기
     function loadLogs() {
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
       const container = document.getElementById('logBoxesContainer');
@@ -331,14 +365,13 @@
             
             const dateLabel = item.dateStr || getTodayFormatted();
             
-            // 이름이 없으면 기본 텍스트 처리
             const exerciseName = item.exercise 
               ? `<strong>${item.exercise}</strong>` 
               : `<span style="color:#aaa;">(사진 기록)</span>`;
 
-            // 사진 썸네일 HTML
+            // 클릭 시 openModalByIndex 함수 호출
             const imgTag = item.image 
-              ? `<img src="${item.image}" class="log-thumb" alt="운동 사진">` 
+              ? `<img src="${item.image}" class="log-thumb" alt="운동 사진" onclick="openModalByIndex(${item.originalIndex})">` 
               : '';
 
             contentHtml += `
@@ -362,7 +395,19 @@
       });
     }
 
-    // 기록 삭제
+    // 🔍 사진 확대 모달 관련 함수
+    function openModalByIndex(index) {
+      const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
+      if (logs[index] && logs[index].image) {
+        document.getElementById('modalImg').src = logs[index].image;
+        document.getElementById('imageModal').style.display = 'flex';
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
+
     function deleteLog(index) {
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
       logs.splice(index, 1);
@@ -370,7 +415,6 @@
       loadLogs();
     }
 
-    // 초기 실행
     renderInputFields();
     loadLogs();
   </script>
