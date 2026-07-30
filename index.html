@@ -3,7 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나의 헬스 증량 메모장</title>
+
+  <!-- 검색엔진 최적화 (SEO) 및 SNS 공유 태그 -->
+  <title>나의 헬스 증량 메모장 | 간편 운동 기록 및 사진 저장</title>
+  <meta name="description" content="부위별 운동 무게, 횟수, 유산소 및 운동 사진을 간편하게 기록하고 증량 과정을 확인하는 웹 메모장입니다.">
+  <meta name="keywords" content="헬스, 운동기록, 증량메모장, 헬스메모장, 운동일지, 오운완">
+  
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="나의 헬스 증량 메모장">
+  <meta property="og:description" content="간편하게 운동 무게와 사진을 기록하세요!">
+  <meta property="og:url" content="https://gym-log-olive.vercel.app">
+
   <style>
     body { font-family: sans-serif; background-color: #121212; color: #fff; padding: 12px; max-width: 500px; margin: 0 auto; }
     h1 { text-align: center; color: #4caf50; font-size: 18px; margin: 0 0 10px 0; }
@@ -315,7 +325,6 @@
       `;
     }
 
-    // 아이폰/안드로이드 완벽 호환 고속 이미지 압축 함수
     function compressImage(file) {
       return new Promise((resolve) => {
         if (!file) return resolve(null);
