@@ -128,7 +128,7 @@
     }
     .empty-text { color: #555; font-size: 13px; text-align: center; margin: auto 0; padding: 20px 0; }
 
-    /* 🔍 사진 원본 확대 모달 */
+    /* 사진 원본 확대 모달 */
     .image-modal {
       display: none;
       position: fixed;
@@ -163,17 +163,17 @@
 </head>
 <body>
 
-  <h1>💪 헬스 증량 메모장</h1>
+  <h1>헬스 증량 메모장</h1>
 
   <div class="input-card">
     <label for="category" style="margin-top:0;">운동 부위 선택</label>
     <select id="category" onchange="renderInputFields()">
-      <option value="가슴">🏋️‍♂️ 가슴</option>
-      <option value="등">🦅 등</option>
-      <option value="하체">🦵 하체</option>
-      <option value="어깨">🛡️ 어깨</option>
-      <option value="팔">💪 팔</option>
-      <option value="유산소">🏃‍♂️ 유산소</option>
+      <option value="가슴">가슴</option>
+      <option value="등">등</option>
+      <option value="하체">하체</option>
+      <option value="어깨">어깨</option>
+      <option value="팔">팔</option>
+      <option value="유산소">유산소</option>
     </select>
 
     <div id="dynamicInputs"></div>
@@ -181,7 +181,7 @@
     <button class="btn-add" id="saveBtn" onclick="addLog()">기록 저장하기</button>
   </div>
 
-  <div class="section-title">📋 운동 기록 목록</div>
+  <div class="section-title">운동 기록 목록</div>
   <div id="logBoxesContainer"></div>
 
   <div id="imageModal" class="image-modal" onclick="closeModal()">
@@ -191,17 +191,16 @@
 
   <script>
     const categories = [
-      { name: '가슴', emoji: '🏋️‍♂️', example: 'Bench Press, 벤치프레스' },
-      { name: '등', emoji: '🦅', example: 'Lat Pulldown, 렛풀다운' },
-      { name: '하체', emoji: '🦵', example: 'Squat, 스쿼트' },
-      { name: '어깨', emoji: '🛡️', example: 'Shoulder Press, 숄더프레스' },
-      { name: '팔', emoji: '💪', example: 'Biceps Curl, 바벨컬' },
-      { name: '유산소', emoji: '🏃‍♂️', example: 'Treadmill, 천국의 계단' }
+      { name: '가슴', example: 'Bench Press, 벤치프레스' },
+      { name: '등', example: 'Lat Pulldown, 렛풀다운' },
+      { name: '하체', example: 'Squat, 스쿼트' },
+      { name: '어깨', example: 'Shoulder Press, 숄더프레스' },
+      { name: '팔', example: 'Biceps Curl, 바벨컬' },
+      { name: '유산소', example: 'Treadmill, 천국의 계단' }
     ];
 
     let db = null;
 
-    // 안전하게 IndexedDB 초기화 (오류 발생 시에도 프로그램 중단 방지)
     function initDB() {
       try {
         if (!window.indexedDB) return;
@@ -233,7 +232,6 @@
       return `${today.getMonth() + 1}/${today.getDate()}`;
     }
 
-    // 선택된 카테고리에 맞는 입력 필드를 화면에 표시
     function renderInputFields() {
       const categorySelect = document.getElementById('category');
       if (!categorySelect) return;
@@ -246,7 +244,7 @@
         <label>운동 이름 (선택)</label>
         <input type="text" id="exercise" placeholder="예: ${currentCat.example}" autocomplete="off">
         
-        <label>📷 운동 사진 첨부 (고화질 원본 저장 가능)</label>
+        <label>운동 사진 첨부 (고화질 원본 저장 가능)</label>
         <input type="file" id="exerciseImg" accept="image/*">
       `;
 
@@ -349,7 +347,7 @@
           const box = document.createElement('div');
           box.className = 'category-box';
 
-          let contentHtml = `<div class="category-title">${cat.emoji} ${cat.name}</div>`;
+          let contentHtml = `<div class="category-title">${cat.name}</div>`;
 
           if (catLogs.length === 0) {
             contentHtml += `<p class="empty-text">기록 없음</p>`;
@@ -415,7 +413,6 @@
       };
     }
 
-    // 페이지 진입 즉시 실행
     renderInputFields();
     initDB();
   </script>
