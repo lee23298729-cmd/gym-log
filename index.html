@@ -133,12 +133,12 @@
 
   <script>
     const categories = [
-      { name: '가슴', emoji: '🏋️‍♂️' },
-      { name: '등', emoji: '🦅' },
-      { name: '하체', emoji: '🦵' },
-      { name: '어깨', emoji: '🛡️' },
-      { name: '팔', emoji: '💪' },
-      { name: '유산소', emoji: '🏃‍♂️' }
+      { name: '가슴', emoji: '🏋️‍♂️', example: 'Bench Press, 벤치프레스' },
+      { name: '등', emoji: '🦅', example: 'Lat Pulldown, 렛풀다운' },
+      { name: '하체', emoji: '🦵', example: 'Squat, 스쿼트' },
+      { name: '어깨', emoji: '🛡️', example: 'Shoulder Press, 숄더프레스' },
+      { name: '팔', emoji: '💪', example: 'Biceps Curl, 바벨컬' },
+      { name: '유산소', emoji: '🏃‍♂️', example: 'Treadmill, 천국의 계단' }
     ];
 
     // 오늘 날짜 포맷 (예: 7/30)
@@ -149,18 +149,19 @@
 
     // 선택 부위에 따른 입력창 생성
     function renderInputFields() {
-      const category = document.getElementById('category').value;
+      const categoryVal = document.getElementById('category').value;
       const container = document.getElementById('dynamicInputs');
+      const currentCat = categories.find(c => c.name === categoryVal);
 
-      if (category === '유산소') {
+      if (categoryVal === '유산소') {
         container.innerHTML = `
-          <input type="text" id="exercise" placeholder="운동 이름 (예: 천국의 계단)">
+          <input type="text" id="exercise" placeholder="운동 이름 (예: ${currentCat.example})" autocomplete="off">
           <input type="number" id="time" placeholder="운동 시간 (분)">
           <input type="number" id="calories" placeholder="소모 칼로리 (kcal)">
         `;
       } else {
         container.innerHTML = `
-          <input type="text" id="exercise" placeholder="운동 이름 (예: 벤치프레스)">
+          <input type="text" id="exercise" placeholder="운동 이름 (예: ${currentCat.example})" autocomplete="off">
           <input type="number" id="weight" placeholder="무게 (kg)">
           <input type="number" id="reps" placeholder="횟수 (회)">
         `;
@@ -231,7 +232,6 @@
               ? `${item.time}분·${item.calories}kcal`
               : `${item.weight}kg × ${item.reps}회`;
             
-            // 날짜 정보가 없으면 오늘 날짜 기본 적용
             const dateLabel = item.dateStr || getTodayFormatted();
 
             contentHtml += `
