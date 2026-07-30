@@ -199,34 +199,48 @@
       { name: '유산소', emoji: '🏃‍♂️', example: 'Treadmill, 천국의 계단' }
     ];
 
-    let db;
-    const dbReq = indexedDB.open("GymLogDB", 1);
+    let db = null;
 
-    dbReq.onupgradeneeded = function(e) {
-      db = e.target.result;
-      if (!db.objectStoreNames.contains("logs")) {
-        db.createObjectStore("logs", { keyPath: "id", autoIncrement: true });
+    // 안전하게 IndexedDB 초기화 (오류 발생 시에도 프로그램 중단 방지)
+    function initDB() {
+      try {
+        if (!window.indexedDB) return;
+        
+        const dbReq = indexedDB.open("GymLogDB", 1);
+
+        dbReq.onupgradeneeded = function(e) {
+          db = e.target.result;
+          if (!db.objectStoreNames.contains("logs")) {
+            db.createObjectStore("logs", { keyPath: "id", autoIncrement: true });
+          }
+        };
+
+        dbReq.onsuccess = function(e) {
+          db = e.target.result;
+          loadLogs();
+        };
+
+        dbReq.onerror = function(e) {
+          console.error("IndexedDB 접근 오류:", e);
+        };
+      } catch (err) {
+        console.error("IndexedDB 초기화 예외:", err);
       }
-    };
-
-    dbReq.onsuccess = function(e) {
-      db = e.target.result;
-      loadLogs();
-    };
-
-    dbReq.onerror = function(e) {
-      alert("데이터베이스 오픈 실패. 모바일 브라우저 설정을 확인해주세요.");
-    };
+    }
 
     function getTodayFormatted() {
       const today = new Date();
       return `${today.getMonth() + 1}/${today.getDate()}`;
     }
 
+    // 선택된 카테고리에 맞는 입력 필드를 화면에 표시
     function renderInputFields() {
-      const categoryVal = document.getElementById('category').value;
+      const categorySelect = document.getElementById('category');
+      if (!categorySelect) return;
+
+      const categoryVal = categorySelect.value;
       const container = document.getElementById('dynamicInputs');
-      const currentCat = categories.find(c => c.name === categoryVal);
+      const currentCat = categories.find(c => c.name === categoryVal) || categories[0];
 
       let commonHtml = `
         <label>운동 이름 (선택)</label>
@@ -253,7 +267,7 @@
 
     function addLog() {
       if (!db) {
-        alert("DB 준비 중입니다. 잠시 후 다시 시도해주세요.");
+        alert("모바일 파일 보안 제한으로 데이터를 저장할 수 없습니다. 웹 주소(HTTPS) 환경에서 이용해주세요.");
         return;
       }
 
@@ -302,7 +316,6 @@
       const store = tx.objectStore("logs");
       const addReq = store.add(logData);
 
-      // 성공 시 팝업 삭제 후 즉시 화면 갱신 및 입력창 초기화
       addReq.onsuccess = function() {
         renderInputFields();
         loadLogs();
@@ -402,7 +415,9 @@
       };
     }
 
+    // 페이지 진입 즉시 실행
     renderInputFields();
+    initDB();
   </script>
 </body>
 </html>
