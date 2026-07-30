@@ -17,13 +17,14 @@
 
     /* 상단 입력 카드 */
     .input-card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #333; }
-    .input-card label { display: block; font-size: 14px; color: #aaa; margin-bottom: 6px; }
+    .input-card label { display: block; font-size: 14px; color: #aaa; margin-top: 10px; margin-bottom: 4px; }
     
-    input, select, button { width: 100%; padding: 12px; margin-top: 6px; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; font-size: 15px; }
+    input, select, button { width: 100%; padding: 12px; margin-top: 4px; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; font-size: 15px; }
     input, select { background: #2c2c2c; color: #fff; }
+    input[type="file"] { padding: 8px; font-size: 13px; color: #ccc; cursor: pointer; }
     input::placeholder { color: #777; }
     
-    button.btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; cursor: pointer; margin-top: 15px; font-size: 16px; }
+    button.btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; cursor: pointer; margin-top: 18px; font-size: 16px; }
     button.btn-add:hover { background: #45a049; }
 
     /* 가로 배치 컨테이너 (옆으로 스크롤 가능) */
@@ -44,7 +45,7 @@
 
     /* 가로로 놓이는 부위별 칸 상자 */
     .category-box {
-      flex: 0 0 240px; /* 박스 가로 크기 고정 */
+      flex: 0 0 260px; /* 박스 가로 크기 지정 */
       scroll-snap-align: start;
       background: #1e1e1e;
       border: 1px solid #2d2d2d;
@@ -54,7 +55,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 180px;
+      min-height: 200px;
     }
     
     .category-title {
@@ -74,7 +75,7 @@
       background: #2c2c2c; 
       padding: 8px 10px; 
       border-radius: 6px; 
-      margin-bottom: 6px; 
+      margin-bottom: 8px; 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
@@ -82,7 +83,30 @@
     }
     li:last-child { margin-bottom: 0; }
 
-    /* 운동 항목 내부 날짜 태그 스타일 */
+    .log-item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    /* 기록된 사진 썸네일 */
+    .log-thumb {
+      width: 42px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #444;
+      flex-shrink: 0;
+    }
+
+    .log-text-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+
     .date-tag {
       color: #888;
       font-size: 11px;
@@ -94,13 +118,14 @@
       background: #e53935; 
       color: #fff; 
       border: none; 
-      padding: 3px 6px; 
+      padding: 4px 8px; 
       border-radius: 4px; 
       cursor: pointer; 
       font-size: 11px; 
       width: auto;
       margin-top: 0;
       margin-left: 6px;
+      flex-shrink: 0;
     }
     .btn-delete:hover { background: #d32f2f; }
     .empty-text { color: #555; font-size: 13px; text-align: center; margin: auto 0; padding: 20px 0; }
@@ -112,7 +137,7 @@
 
   <!-- 1. 운동 기록 입력 섹션 -->
   <div class="input-card">
-    <label for="category">운동 부위 선택</label>
+    <label for="category" style="margin-top:0;">운동 부위 선택</label>
     <select id="category" onchange="renderInputFields()">
       <option value="가슴">🏋️‍♂️ 가슴</option>
       <option value="등">🦅 등</option>
@@ -141,45 +166,54 @@
       { name: '유산소', emoji: '🏃‍♂️', example: 'Treadmill, 천국의 계단' }
     ];
 
-    // 오늘 날짜 포맷 (예: 7/30)
     function getTodayFormatted() {
       const today = new Date();
       return `${today.getMonth() + 1}/${today.getDate()}`;
     }
 
-    // 선택 부위에 따른 입력창 생성
+    // 선택 부위에 따른 입력창 생성 (이름/사진 선택사항)
     function renderInputFields() {
       const categoryVal = document.getElementById('category').value;
       const container = document.getElementById('dynamicInputs');
       const currentCat = categories.find(c => c.name === categoryVal);
 
+      let commonHtml = `
+        <label>운동 이름 (선택)</label>
+        <input type="text" id="exercise" placeholder="예: ${currentCat.example}" autocomplete="off">
+        
+        <label>📷 운동 사진 첨부 (선택)</label>
+        <input type="file" id="exerciseImg" accept="image/*">
+      `;
+
       if (categoryVal === '유산소') {
-        container.innerHTML = `
-          <input type="text" id="exercise" placeholder="운동 이름 (예: ${currentCat.example})" autocomplete="off">
+        container.innerHTML = commonHtml + `
+          <label>운동 측정</label>
           <input type="number" id="time" placeholder="운동 시간 (분)">
           <input type="number" id="calories" placeholder="소모 칼로리 (kcal)">
         `;
       } else {
-        container.innerHTML = `
-          <input type="text" id="exercise" placeholder="운동 이름 (예: ${currentCat.example})" autocomplete="off">
+        container.innerHTML = commonHtml + `
+          <label>무게 및 횟수</label>
           <input type="number" id="weight" placeholder="무게 (kg)">
           <input type="number" id="reps" placeholder="횟수 (회)">
         `;
       }
     }
 
-    // 운동 기록 저장
+    // 운동 기록 저장 로직
     function addLog() {
       const category = document.getElementById('category').value;
       const exercise = document.getElementById('exercise').value.trim();
+      const imgInput = document.getElementById('exerciseImg');
+      const file = imgInput.files[0];
 
-      if (!exercise) {
-        alert('운동 이름을 입력해주세요!');
+      // [검증] 이름도 없고 사진도 선택하지 않은 경우 방지
+      if (!exercise && !file) {
+        alert('운동 이름이나 사진 중 하나는 등록해 주세요!');
         return;
       }
 
-      const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
-      const dateStr = getTodayFormatted(); // 현재 날짜 (월/일) 저장
+      const logData = { category, exercise };
 
       if (category === '유산소') {
         const time = document.getElementById('time').value.trim();
@@ -189,7 +223,9 @@
           alert('운동 시간과 소모 칼로리를 모두 입력해주세요!');
           return;
         }
-        logs.push({ dateStr, category, exercise, time, calories, isCardio: true });
+        logData.time = time;
+        logData.calories = calories;
+        logData.isCardio = true;
       } else {
         const weight = document.getElementById('weight').value.trim();
         const reps = document.getElementById('reps').value.trim();
@@ -198,16 +234,77 @@
           alert('무게와 횟수를 모두 입력해주세요!');
           return;
         }
-        logs.push({ dateStr, category, exercise, weight, reps, isCardio: false });
+        logData.weight = weight;
+        logData.reps = reps;
+        logData.isCardio = false;
       }
 
-      localStorage.setItem('gymLogs', JSON.stringify(logs));
+      // 사진 파일 처리 (이미지 압축 후 저장)
+      saveLogWithImage(file, logData);
+    }
+
+    // 이미지를 Canvas로 압축 후 localStorage 저장
+    function saveLogWithImage(file, logData) {
+      logData.dateStr = getTodayFormatted();
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            // 이미지 최적화 (최대 300px 크기로 리사이징)
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const maxSize = 300;
+
+            if (width > height) {
+              if (width > maxSize) {
+                height *= maxSize / width;
+                width = maxSize;
+              }
+            } else {
+              if (height > maxSize) {
+                width *= maxSize / height;
+                height = maxSize;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // 압축된 DataURL 추출 (JPG, 품질 0.7)
+            logData.image = canvas.toDataURL('image/jpeg', 0.7);
+            commitLog(logData);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        logData.image = null;
+        commitLog(logData);
+      }
+    }
+
+    // 최종 저장 및 목록 새로고침
+    function commitLog(logData) {
+      const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
+      logs.push(logData);
+      
+      try {
+        localStorage.setItem('gymLogs', JSON.stringify(logs));
+      } catch (e) {
+        alert('저장 공간이 부족합니다. 이전 기록이나 사진을 삭제해 주세요.');
+        return;
+      }
 
       renderInputFields();
       loadLogs();
     }
 
-    // 기록 불러오기 (각 운동 옆에 날짜 표기)
+    // 기록 불러오기
     function loadLogs() {
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
       const container = document.getElementById('logBoxesContainer');
@@ -233,10 +330,26 @@
               : `${item.weight}kg × ${item.reps}회`;
             
             const dateLabel = item.dateStr || getTodayFormatted();
+            
+            // 이름이 없으면 기본 텍스트 처리
+            const exerciseName = item.exercise 
+              ? `<strong>${item.exercise}</strong>` 
+              : `<span style="color:#aaa;">(사진 기록)</span>`;
+
+            // 사진 썸네일 HTML
+            const imgTag = item.image 
+              ? `<img src="${item.image}" class="log-thumb" alt="운동 사진">` 
+              : '';
 
             contentHtml += `
               <li>
-                <span><span class="date-tag">[${dateLabel}]</span><strong>${item.exercise}</strong>: ${detailText}</span>
+                <div class="log-item-left">
+                  ${imgTag}
+                  <div class="log-text-group">
+                    <div><span class="date-tag">[${dateLabel}]</span>${exerciseName}</div>
+                    <div style="color: #bbb; font-size: 12px;">${detailText}</div>
+                  </div>
+                </div>
                 <button class="btn-delete" onclick="deleteLog(${item.originalIndex})">삭제</button>
               </li>
             `;
@@ -257,7 +370,7 @@
       loadLogs();
     }
 
-    // 초기화 실행
+    // 초기 실행
     renderInputFields();
     loadLogs();
   </script>
