@@ -172,6 +172,44 @@
     }
     .empty-text { color: #555; font-size: 12px; text-align: center; margin: auto 0; padding: 15px 0; }
 
+    /* 쿠팡 파트너스 추천 스타일 */
+    .recommend-card {
+      background: #1e1e1e;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 15px;
+      border: 1px solid #333;
+    }
+    .recommend-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #64b5f6;
+      margin-bottom: 8px;
+    }
+    .recommend-item {
+      background: #2c2c2c;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .recommend-item a {
+      color: #4caf50;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .recommend-desc {
+      color: #aaa;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    .coupang-notice {
+      font-size: 10px;
+      color: #777;
+      margin-top: 8px;
+      line-height: 1.3;
+    }
+
     .backup-card {
       background: #1e1e1e;
       padding: 12px;
@@ -241,7 +279,7 @@
 
   <div class="input-card">
     <label for="category">운동 부위 선택</label>
-    <select id="category" onchange="renderInputFields()">
+    <select id="category" onchange="onCategoryChange()">
       <option value="가슴">가슴</option>
       <option value="등">등</option>
       <option value="하체">하체</option>
@@ -258,6 +296,9 @@
   <div class="section-title">운동 기록 목록</div>
   <div id="logBoxesContainer"></div>
 
+  <!-- 자동 쿠팡 파트너스 추천 카드 -->
+  <div class="recommend-card" id="recommendContainer"></div>
+
   <div class="backup-card">
     <label>간편 데이터 백업 / 복원</label>
     <div class="backup-btn-group">
@@ -272,6 +313,32 @@
   </div>
 
   <script>
+    // 🛒 내가 선택한 쿠팡 파트너스 추천 상품 리스트 (부위별 자동 매칭)
+    const coupangProducts = {
+      '가슴': [
+        { title: '🏋️ 헬스 리프팅 스트랩 / 손목 보호대', desc: '벤치프레스 고중량 시 손목 부상 방지', link: 'https://link.coupang.com/a/YOUR_LINK_1' },
+        { title: '💪 WPI 분리유청 단백질 보충제', desc: '운동 직후 빠른 근육 합성 도우미', link: 'https://link.coupang.com/a/YOUR_LINK_2' }
+      ],
+      '등': [
+        { title: '🪵 퀵 그립 / 헬스 장갑', desc: '렛풀다운, 데드리프트 악력 보조 필수품', link: 'https://link.coupang.com/a/YOUR_LINK_3' },
+        { title: '🍗 촉촉한 닭가슴살 팩 세트', desc: '식단 관리를 위한 맛있는 닭가슴살', link: 'https://link.coupang.com/a/YOUR_LINK_4' }
+      ],
+      '하체': [
+        { title: '👟 접지력 좋은 리프팅화 / 역도화', desc: '스쿼트 할 때 흔들림 없이 바닥 고정', link: 'https://link.coupang.com/a/YOUR_LINK_5' },
+        { title: '🦵 헬스 무릎 보호대 스트랩', desc: '고중량 하체 운동 무릎 관절 보호', link: 'https://link.coupang.com/a/YOUR_LINK_6' }
+      ],
+      '어깨': [
+        { title: '🥤 BCAA 아미노산 수분 보충제', desc: '지치지 않는 어깨 운동 피로 회복 음료', link: 'https://link.coupang.com/a/YOUR_LINK_7' }
+      ],
+      '팔': [
+        { title: '🏋️ 암블래스터 / 팔 팔꿈치 보호대', desc: '이두/삼두 자극 극대화 및 관절 보호', link: 'https://link.coupang.com/a/YOUR_LINK_8' }
+      ],
+      '유산소': [
+        { title: '🏃‍♂️ 초경량 쿠션 러닝화', desc: '천국의 계단/러닝머신 무릎 충격 완화', link: 'https://link.coupang.com/a/YOUR_LINK_9' },
+        { title: '⏱️ 스마트 워치 헬스 밴드', desc: '심박수 및 소모 칼로리 실시간 측정이 가능', link: 'https://link.coupang.com/a/YOUR_LINK_10' }
+      ]
+    };
+
     const categories = [
       { name: '가슴', example: '벤치프레스' },
       { name: '등', example: '렛풀다운' },
@@ -284,6 +351,39 @@
     function getTodayFormatted() {
       const today = new Date();
       return `${today.getMonth() + 1}/${today.getDate()}`;
+    }
+
+    function onCategoryChange() {
+      renderInputFields();
+      renderRecommendations();
+    }
+
+    function renderRecommendations() {
+      const categoryEl = document.getElementById('category');
+      const container = document.getElementById('recommendContainer');
+      if (!categoryEl || !container) return;
+
+      const category = categoryEl.value;
+      const products = coupangProducts[category] || coupangProducts['가슴'];
+
+      let html = `<div class="recommend-title">🛒 [${category}] 추천 헬스 용품</div>`;
+
+      products.forEach(item => {
+        html += `
+          <div class="recommend-item">
+            <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title} ↗</a>
+            <div class="recommend-desc">${item.desc}</div>
+          </div>
+        `;
+      });
+
+      html += `
+        <div class="coupang-notice">
+          ※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
+        </div>
+      `;
+
+      container.innerHTML = html;
     }
 
     function renderInputFields() {
@@ -639,6 +739,7 @@
     }
 
     renderInputFields();
+    renderRecommendations();
     loadLogs();
   </script>
 </body>
