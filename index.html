@@ -199,7 +199,6 @@
       { name: '유산소', emoji: '🏃‍♂️', example: 'Treadmill, 천국의 계단' }
     ];
 
-    // IndexedDB 초기화 (모바일 고화질 원본 파일 저장용 DB)
     let db;
     const dbReq = indexedDB.open("GymLogDB", 1);
 
@@ -272,7 +271,7 @@
         category, 
         exercise,
         dateStr: getTodayFormatted(),
-        imageBlob: file // 원본 이미지 바이너리 파일 그대로 저장!
+        imageBlob: file
       };
 
       if (category === '유산소') {
@@ -299,13 +298,12 @@
         logData.isCardio = false;
       }
 
-      // IndexedDB 트랜잭션으로 안전하게 저장
       const tx = db.transaction(["logs"], "readwrite");
       const store = tx.objectStore("logs");
       const addReq = store.add(logData);
 
+      // 성공 시 팝업 삭제 후 즉시 화면 갱신 및 입력창 초기화
       addReq.onsuccess = function() {
-        alert('저장되었습니다!');
         renderInputFields();
         loadLogs();
       };
@@ -315,13 +313,11 @@
       };
     }
 
-    // 이미 생성된 ObjectURL을 저장하여 메모리 누수 방지
     let activeObjectUrls = [];
 
     function loadLogs() {
       if (!db) return;
 
-      // 이전 URL 객체 메모리 해제
       activeObjectUrls.forEach(url => URL.revokeObjectURL(url));
       activeObjectUrls = [];
 
