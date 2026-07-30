@@ -6,59 +6,39 @@
   <title>나의 헬스 증량 메모장</title>
   <style>
     body { font-family: sans-serif; background-color: #121212; color: #fff; padding: 20px; max-width: 500px; margin: 0 auto; }
-    h1 { text-align: center; color: #4caf50; margin-bottom: 25px; }
+    h1 { text-align: center; color: #4caf50; margin-bottom: 20px; }
+    h2 { font-size: 20px; color: #fff; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #4caf50; padding-bottom: 8px; }
     
-    /* 각 부위별 카드 박스 */
-    .card { 
-      background: #1e1e1e; 
-      padding: 18px; 
-      border-radius: 12px; 
-      margin-bottom: 20px; 
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-      border: 1px solid #2d2d2d; 
-    }
-    .card-header { 
-      font-size: 18px; 
-      font-weight: bold; 
-      color: #4caf50; 
-      margin-bottom: 14px; 
-      display: flex; 
-      align-items: center; 
-      gap: 6px; 
-      border-bottom: 1px solid #333; 
-      padding-bottom: 8px; 
-    }
+    /* 상단 입력 카드 */
+    .input-card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #333; }
+    .input-card label { display: block; font-size: 14px; color: #aaa; margin-bottom: 6px; }
     
-    /* 입력 양식 */
-    .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-    input { 
-      width: 100%; 
-      padding: 10px 12px; 
-      border-radius: 6px; 
-      border: 1px solid #333; 
-      background: #2c2c2c; 
-      color: #fff; 
-      box-sizing: border-box; 
-      font-size: 14px; 
-    }
-    input::placeholder { color: #888; }
+    input, select, button { width: 100%; padding: 12px; margin-top: 6px; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; font-size: 15px; }
+    input, select { background: #2c2c2c; color: #fff; }
+    input::placeholder { color: #777; }
     
-    /* 저장 버튼 */
-    button.btn-add { 
-      width: 100%; 
-      padding: 10px; 
-      background: #4caf50; 
-      color: #fff; 
-      border: none; 
-      border-radius: 6px; 
-      font-weight: bold; 
-      cursor: pointer; 
-      font-size: 14px; 
-    }
+    button.btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; cursor: pointer; margin-top: 15px; font-size: 16px; }
     button.btn-add:hover { background: #45a049; }
-    
-    /* 운동 기록 리스트 */
-    ul { list-style: none; padding: 0; margin-top: 15px; margin-bottom: 0; }
+
+    /* 오늘 기록한 운동 - 부위별 박스(칸) 스타일 */
+    .category-box {
+      background: #1e1e1e;
+      border: 1px solid #2d2d2d;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .category-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #4caf50;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    ul { list-style: none; padding: 0; margin: 0; }
     li { 
       background: #2c2c2c; 
       padding: 10px 12px; 
@@ -69,6 +49,8 @@
       align-items: center; 
       font-size: 14px; 
     }
+    li:last-child { margin-bottom: 0; }
+
     .btn-delete { 
       background: #e53935; 
       color: #fff; 
@@ -77,115 +59,148 @@
       border-radius: 4px; 
       cursor: pointer; 
       font-size: 12px; 
+      width: auto;
+      margin-top: 0;
     }
     .btn-delete:hover { background: #d32f2f; }
-    .empty-msg { color: #666; font-size: 13px; text-align: center; margin-top: 12px; }
+    .empty-text { color: #666; font-size: 13px; margin: 0; text-align: center; padding: 5px 0; }
   </style>
 </head>
 <body>
 
   <h1>💪 헬스 증량 메모장</h1>
 
-  <!-- 각 부위별 카드가 들어가는 컨테이너 -->
-  <div id="cardsContainer"></div>
+  <!-- 1. 운동 기록 입력 섹션 -->
+  <div class="input-card">
+    <label for="category">운동 부위 선택</label>
+    <select id="category" onchange="renderInputFields()">
+      <option value="가슴">🏋️‍♂️ 가슴</option>
+      <option value="등">🦅 등</option>
+      <option value="하체">🦵 하체</option>
+      <option value="어깨">🛡️ 어깨</option>
+      <option value="팔">💪 팔</option>
+      <option value="유산소">🏃‍♂️ 유산소</option>
+    </select>
+
+    <!-- 선택된 부위에 따라 입력창이 바뀜 -->
+    <div id="dynamicInputs"></div>
+
+    <button class="btn-add" onclick="addLog()">기록 저장하기</button>
+  </div>
+
+  <!-- 2. 오늘 기록한 운동 섹션 (각 부위별 칸 존재) -->
+  <h2>📋 오늘 기록한 운동</h2>
+  <div id="logBoxesContainer"></div>
 
   <script>
-    // 카테고리 구성 정의 (근력 vs 유산소)
-    const config = [
-      { key: '가슴', emoji: '🏋️‍♂️', type: 'strength' },
-      { key: '등', emoji: '🦅', type: 'strength' },
-      { key: '하체', emoji: '🦵', type: 'strength' },
-      { key: '어깨', emoji: '🛡️', type: 'strength' },
-      { key: '팔', emoji: '💪', type: 'strength' },
-      { key: '유산소', emoji: '🏃‍♂️', type: 'cardio' }
+    const categories = [
+      { name: '가슴', emoji: '🏋️‍♂️' },
+      { name: '등', emoji: '🦅' },
+      { name: '하체', emoji: '🦵' },
+      { name: '어깨', emoji: '🛡️' },
+      { name: '팔', emoji: '💪' },
+      { name: '유산소', emoji: '🏃‍♂️' }
     ];
 
-    // 카드 화면 렌더링
-    function renderApp() {
-      const container = document.getElementById('cardsContainer');
-      const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
-      container.innerHTML = '';
+    // 선택 부위에 따른 입력창 생성
+    function renderInputFields() {
+      const category = document.getElementById('category').value;
+      const container = document.getElementById('dynamicInputs');
 
-      config.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-
-        // 해당 카테고리에 속한 기록만 필터링
-        const catLogs = logs
-          .map((log, index) => ({ ...log, originalIndex: index }))
-          .filter(log => log.category === item.key);
-
-        // 입력 폼 분기 (근력 vs 유산소)
-        let inputsHtml = '';
-        if (item.type === 'strength') {
-          inputsHtml = `
-            <input type="text" id="ex-${item.key}" placeholder="운동 이름 (예: 벤치프레스)">
-            <input type="number" id="val1-${item.key}" placeholder="무게 (kg)">
-            <input type="number" id="val2-${item.key}" placeholder="횟수 (회)">
-          `;
-        } else {
-          inputsHtml = `
-            <input type="text" id="ex-${item.key}" placeholder="운동 이름 (예: 천국의 계단)">
-            <input type="number" id="val1-${item.key}" placeholder="시간 (분)">
-            <input type="number" id="val2-${item.key}" placeholder="소모 칼로리 (kcal)">
-          `;
-        }
-
-        // 기록 리스트 생성
-        let listHtml = '';
-        if (catLogs.length === 0) {
-          listHtml = `<p class="empty-msg">기록된 ${item.key} 운동이 없습니다.</p>`;
-        } else {
-          listHtml = '<ul>';
-          catLogs.forEach(log => {
-            const detailStr = item.type === 'strength' 
-              ? `${log.val1}kg × ${log.val2}회`
-              : `${log.val1}분 · ${log.val2}kcal 소모`;
-            listHtml += `
-              <li>
-                <span><strong>${log.exercise}</strong>: ${detailStr}</span>
-                <button class="btn-delete" onclick="deleteLog(${log.originalIndex})">삭제</button>
-              </li>
-            `;
-          });
-          listHtml += '</ul>';
-        }
-
-        // 카드 내부에 HTML 조립
-        card.innerHTML = `
-          <div class="card-header">${item.emoji} ${item.key}</div>
-          <div class="input-group">
-            ${inputsHtml}
-          </div>
-          <button class="btn-add" onclick="addLog('${item.key}', '${item.type}')">기록 저장</button>
-          ${listHtml}
+      if (category === '유산소') {
+        container.innerHTML = `
+          <input type="text" id="exercise" placeholder="운동 이름 (예: 천국의 계단, 러닝머신)">
+          <input type="number" id="time" placeholder="운동 시간 (분)">
+          <input type="number" id="calories" placeholder="소모 칼로리 (kcal)">
         `;
-
-        container.appendChild(card);
-      });
+      } else {
+        container.innerHTML = `
+          <input type="text" id="exercise" placeholder="운동 이름 (예: 벤치프레스)">
+          <input type="number" id="weight" placeholder="무게 (kg)">
+          <input type="number" id="reps" placeholder="횟수 (회)">
+        `;
+      }
     }
 
-    // 특정 부위 기록 저장
-    function addLog(category, type) {
-      const exInput = document.getElementById(`ex-${category}`);
-      const val1Input = document.getElementById(`val1-${category}`);
-      const val2Input = document.getElementById(`val2-${category}`);
+    // 운동 기록 저장
+    function addLog() {
+      const category = document.getElementById('category').value;
+      const exercise = document.getElementById('exercise').value.trim();
 
-      const exercise = exInput.value.trim();
-      const val1 = val1Input.value.trim();
-      const val2 = val2Input.value.trim();
-
-      if (!exercise || !val1 || !val2) {
-        alert('모든 항목을 입력해주세요!');
+      if (!exercise) {
+        alert('운동 이름을 입력해주세요!');
         return;
       }
 
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
-      logs.push({ category, exercise, val1, val2, type });
+
+      if (category === '유산소') {
+        const time = document.getElementById('time').value.trim();
+        const calories = document.getElementById('calories').value.trim();
+
+        if (!time || !calories) {
+          alert('운동 시간과 소모 칼로리를 모두 입력해주세요!');
+          return;
+        }
+        logs.push({ category, exercise, time, calories, isCardio: true });
+      } else {
+        const weight = document.getElementById('weight').value.trim();
+        const reps = document.getElementById('reps').value.trim();
+
+        if (!weight || !reps) {
+          alert('무게와 횟수를 모두 입력해주세요!');
+          return;
+        }
+        logs.push({ category, exercise, weight, reps, isCardio: false });
+      }
+
       localStorage.setItem('gymLogs', JSON.stringify(logs));
 
-      // 화면 새로고침
-      renderApp();
+      // 입력창 초기화 및 리스트 새로고침
+      renderInputFields();
+      loadLogs();
+    }
+
+    // 기록 불러오기 및 부위별 박스(칸) 출력
+    function loadLogs() {
+      const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
+      const container = document.getElementById('logBoxesContainer');
+      container.innerHTML = '';
+
+      categories.forEach(cat => {
+        // 해당 부위에 적힌 기록 필터링
+        const catLogs = logs
+          .map((log, index) => ({ ...log, originalIndex: index }))
+          .filter(log => log.category === cat.name);
+
+        // 부위별 칸(Box) 생성
+        const box = document.createElement('div');
+        box.className = 'category-box';
+
+        let contentHtml = `<div class="category-title">${cat.emoji} ${cat.name} 칸</div>`;
+
+        if (catLogs.length === 0) {
+          contentHtml += `<p class="empty-text">기록된 ${cat.name} 운동이 없습니다.</p>`;
+        } else {
+          contentHtml += '<ul>';
+          catLogs.forEach(item => {
+            const detailText = item.isCardio 
+              ? `${item.time}분 · ${item.calories}kcal`
+              : `${item.weight}kg × ${item.reps}회`;
+
+            contentHtml += `
+              <li>
+                <span><strong>${item.exercise}</strong>: ${detailText}</span>
+                <button class="btn-delete" onclick="deleteLog(${item.originalIndex})">삭제</button>
+              </li>
+            `;
+          });
+          contentHtml += '</ul>';
+        }
+
+        box.innerHTML = contentHtml;
+        container.appendChild(box);
+      });
     }
 
     // 기록 삭제
@@ -193,11 +208,12 @@
       const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
       logs.splice(index, 1);
       localStorage.setItem('gymLogs', JSON.stringify(logs));
-      renderApp();
+      loadLogs();
     }
 
-    // 앱 초기화
-    renderApp();
+    // 페이지 초기 로드
+    renderInputFields();
+    loadLogs();
   </script>
 </body>
 </html>
