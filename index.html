@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 헬스 증량 메모장</title>
+  <style>
+    body { font-family: sans-serif; background-color: #121212; color: #fff; padding: 20px; max-width: 500px; margin: 0 auto; }
+    h1 { text-align: center; color: #4caf50; }
+    .card { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    input, button { width: 100%; padding: 12px; margin-top: 8px; border-radius: 5px; border: none; box-sizing: border-box; font-size: 16px; }
+    input { background: #2c2c2c; color: #fff; }
+    button { background: #4caf50; color: #fff; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    ul { list-style: none; padding: 0; }
+    li { background: #2c2c2c; padding: 12px; border-radius: 5px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+
+  <h1>💪 헬스 증량 메모장</h1>
+
+  <div class="card">
+    <input type="text" id="exercise" placeholder="운동 이름 (예: 벤치프레스)">
+    <input type="number" id="weight" placeholder="무게 (kg)">
+    <input type="number" id="reps" placeholder="횟수 (회)">
+    <button onclick="addLog()">기록 저장하기</button>
+  </div>
+
+  <h2>📋 오늘 기록한 운동</h2>
+  <ul id="logList"></ul>
+
+  <script>
+    function loadLogs() {
+      const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
+      const list = document.getElementById('logList');
+      list.innerHTML = '';
+      logs.forEach(log => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span><strong>${log.exercise}</strong>: ${log.weight}kg × ${log.reps}회</span>`;
+        list.appendChild(li);
+      });
+    }
+
+    function addLog() {
+      const exercise = document.getElementById('exercise').value;
+      const weight = document.getElementById('weight').value;
+      const reps = document.getElementById('reps').value;
+
+      if (!exercise || !weight || !reps) {
+        alert('모든 항목을 입력해주세요!');
+        return;
+      }
+
+      const logs = JSON.parse(localStorage.getItem('gymLogs') || '[]');
+      logs.push({ exercise, weight, reps });
+      localStorage.setItem('gymLogs', JSON.stringify(logs));
+
+      document.getElementById('exercise').value = '';
+      document.getElementById('weight').value = '';
+      document.getElementById('reps').value = '';
+
+      loadLogs();
+    }
+
+    loadLogs();
+  </script>
+</body>
+</html>
