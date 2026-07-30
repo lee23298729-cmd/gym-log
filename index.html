@@ -172,7 +172,7 @@
     }
     .empty-text { color: #555; font-size: 12px; text-align: center; margin: auto 0; padding: 15px 0; }
 
-    /* 쿠팡 파트너스 추천 스타일 */
+    /* 쿠팡 파트너스 추천 스타일 (사진 포함) */
     .recommend-card {
       background: #1e1e1e;
       padding: 12px;
@@ -184,24 +184,41 @@
       font-size: 13px;
       font-weight: bold;
       color: #64b5f6;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     .recommend-item {
       background: #2c2c2c;
-      padding: 8px 10px;
+      padding: 8px;
       border-radius: 6px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .recommend-item a {
+    .recommend-img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: #3a3a3a;
+      flex-shrink: 0;
+    }
+    .recommend-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .recommend-info a {
       color: #4caf50;
       text-decoration: none;
       font-weight: bold;
       font-size: 12px;
+      line-height: 1.2;
     }
     .recommend-desc {
       color: #aaa;
       font-size: 11px;
-      margin-top: 2px;
     }
     .coupang-notice {
       font-size: 10px;
@@ -313,29 +330,79 @@
   </div>
 
   <script>
-    // 🛒 내가 선택한 쿠팡 파트너스 추천 상품 리스트 (부위별 자동 매칭)
+    // 쿠팡 파트너스 추천 상품 리스트 (이미지 경로 img 추가)
     const coupangProducts = {
       '가슴': [
-        { title: '🏋️ 헬스 리프팅 스트랩 / 손목 보호대', desc: '벤치프레스 고중량 시 손목 부상 방지', link: 'https://link.coupang.com/a/YOUR_LINK_1' },
-        { title: '💪 WPI 분리유청 단백질 보충제', desc: '운동 직후 빠른 근육 합성 도우미', link: 'https://link.coupang.com/a/YOUR_LINK_2' }
+        { 
+          title: '헬스 리프팅 스트랩 / 손목 보호대', 
+          desc: '벤치프레스 고중량 시 손목 부상 방지', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_1',
+          img: 'https://via.placeholder.com/100?text=Strap' 
+        },
+        { 
+          title: 'WPI 분리유청 단백질 보충제', 
+          desc: '운동 직후 빠른 근육 합성 도우미', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_2',
+          img: 'https://via.placeholder.com/100?text=Protein' 
+        }
       ],
       '등': [
-        { title: '🪵 퀵 그립 / 헬스 장갑', desc: '렛풀다운, 데드리프트 악력 보조 필수품', link: 'https://link.coupang.com/a/YOUR_LINK_3' },
-        { title: '🍗 촉촉한 닭가슴살 팩 세트', desc: '식단 관리를 위한 맛있는 닭가슴살', link: 'https://link.coupang.com/a/YOUR_LINK_4' }
+        { 
+          title: '퀵 그립 / 헬스 장갑', 
+          desc: '렛풀다운, 데드리프트 악력 보조 필수품', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_3',
+          img: 'https://via.placeholder.com/100?text=Grip' 
+        },
+        { 
+          title: '촉촉한 닭가슴살 팩 세트', 
+          desc: '식단 관리를 위한 맛있는 닭가슴살', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_4',
+          img: 'https://via.placeholder.com/100?text=Chicken' 
+        }
       ],
       '하체': [
-        { title: '👟 접지력 좋은 리프팅화 / 역도화', desc: '스쿼트 할 때 흔들림 없이 바닥 고정', link: 'https://link.coupang.com/a/YOUR_LINK_5' },
-        { title: '🦵 헬스 무릎 보호대 스트랩', desc: '고중량 하체 운동 무릎 관절 보호', link: 'https://link.coupang.com/a/YOUR_LINK_6' }
+        { 
+          title: '접지력 좋은 리프팅화 / 역도화', 
+          desc: '스쿼트 할 때 흔들림 없이 바닥 고정', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_5',
+          img: 'https://via.placeholder.com/100?text=Shoes' 
+        },
+        { 
+          title: '헬스 무릎 보호대 스트랩', 
+          desc: '고중량 하체 운동 무릎 관절 보호', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_6',
+          img: 'https://via.placeholder.com/100?text=Knee' 
+        }
       ],
       '어깨': [
-        { title: '🥤 BCAA 아미노산 수분 보충제', desc: '지치지 않는 어깨 운동 피로 회복 음료', link: 'https://link.coupang.com/a/YOUR_LINK_7' }
+        { 
+          title: 'BCAA 아미노산 수분 보충제', 
+          desc: '지치지 않는 어깨 운동 피로 회복 음료', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_7',
+          img: 'https://via.placeholder.com/100?text=BCAA' 
+        }
       ],
       '팔': [
-        { title: '🏋️ 암블래스터 / 팔 팔꿈치 보호대', desc: '이두/삼두 자극 극대화 및 관절 보호', link: 'https://link.coupang.com/a/YOUR_LINK_8' }
+        { 
+          title: '암블래스터 / 팔 팔꿈치 보호대', 
+          desc: '이두/삼두 자극 극대화 및 관절 보호', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_8',
+          img: 'https://via.placeholder.com/100?text=Arm' 
+        }
       ],
       '유산소': [
-        { title: '🏃‍♂️ 초경량 쿠션 러닝화', desc: '천국의 계단/러닝머신 무릎 충격 완화', link: 'https://link.coupang.com/a/YOUR_LINK_9' },
-        { title: '⏱️ 스마트 워치 헬스 밴드', desc: '심박수 및 소모 칼로리 실시간 측정이 가능', link: 'https://link.coupang.com/a/YOUR_LINK_10' }
+        { 
+          title: '초경량 쿠션 러닝화', 
+          desc: '천국의 계단/러닝머신 무릎 충격 완화', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_9',
+          img: 'https://via.placeholder.com/100?text=Running' 
+        },
+        { 
+          title: '스마트 워치 헬스 밴드', 
+          desc: '심박수 및 소모 칼로리 실시간 측정', 
+          link: 'https://link.coupang.com/a/YOUR_LINK_10',
+          img: 'https://via.placeholder.com/100?text=Watch' 
+        }
       ]
     };
 
@@ -366,13 +433,17 @@
       const category = categoryEl.value;
       const products = coupangProducts[category] || coupangProducts['가슴'];
 
-      let html = `<div class="recommend-title">🛒 [${category}] 추천 헬스 용품</div>`;
+      let html = `<div class="recommend-title">[${category}] 추천 헬스 용품</div>`;
 
       products.forEach(item => {
+        const imgTag = item.img ? `<img src="${item.img}" class="recommend-img" alt="${item.title}">` : '';
         html += `
           <div class="recommend-item">
-            <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title} ↗</a>
-            <div class="recommend-desc">${item.desc}</div>
+            ${imgTag}
+            <div class="recommend-info">
+              <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title}</a>
+              <div class="recommend-desc">${item.desc}</div>
+            </div>
           </div>
         `;
       });
