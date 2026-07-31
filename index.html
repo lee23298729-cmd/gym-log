@@ -4,27 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- 사이트 아이콘 (파비콘 및 모바일 아이콘 완벽 호환 설정) -->
+  <!-- 사이트 아이콘 설정 -->
   <link rel="icon" type="image/png" href="https://gym-log-olive.vercel.app/icon.png?v=2">
   <link rel="shortcut icon" type="image/png" href="https://gym-log-olive.vercel.app/icon.png?v=2">
   <link rel="apple-touch-icon" href="https://gym-log-olive.vercel.app/icon.png?v=2">
 
-  <!-- 네이버 및 구글 서치어드바이저 소유 확인 태그 -->
+  <!-- 소유 확인 및 SEO 태그 -->
   <meta name="naver-site-verification" content="1ceeefc6bddcd4423359dd171e2448a4c3799bad" />
   <meta name="google-site-verification" content="Xld-9XoSoAHU6xRWMumumboF-SvCs8IV74IsALpEQGI" />
-
-  <!-- SNS 링크 공유 미리보기 설정 -->
   <meta property="og:title" content="나의 헬스 증량 메모장">
-  <meta property="og:description" content="부위별 운동 무게, 횟수, 세트를 자유롭게 기록하고 증량 과정을 확인하는 웹 메모장입니다.">
+  <meta property="og:description" content="부위별 운동 무게, 횟수, 세트 및 신체 변화를 기록하는 웹 메모장입니다.">
   <meta property="og:image" content="https://gym-log-olive.vercel.app/icon.png?v=2">
   <meta property="og:type" content="website">
-
-  <!-- 검색엔진 최적화 (SEO) 태그 -->
   <title>나의 헬스 증량 메모장 | 간편 운동 기록</title>
-  <meta name="description" content="부위별 운동 무게, 횟수, 세트를 자유롭게 기록하고 증량 과정을 확인하는 웹 메모장입니다.">
-  
+
+  <!-- Chart.js 라이브러리 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    body { font-family: sans-serif; background-color: #121212; color: #fff; padding: 12px; max-width: 500px; margin: 0 auto; }
+    body { font-family: sans-serif; background-color: #121212; color: #fff; padding: 12px 12px 80px 12px; max-width: 500px; margin: 0 auto; box-sizing: border-box; }
     h1 { text-align: center; color: #4caf50; font-size: 18px; margin: 0 0 10px 0; }
     
     .section-title { 
@@ -56,14 +54,8 @@
     input, select { background: #2c2c2c; color: #fff; margin-bottom: 8px; }
     input::placeholder { color: #777; }
     
-    .input-row {
-      display: flex;
-      gap: 5px;
-    }
-    .input-col {
-      flex: 1;
-      min-width: 0;
-    }
+    .input-row { display: flex; gap: 5px; }
+    .input-col { flex: 1; min-width: 0; }
     
     button.btn-add { 
       background: #4caf50; 
@@ -86,7 +78,6 @@
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
     }
-
     #logBoxesContainer::-webkit-scrollbar { height: 4px; }
     #logBoxesContainer::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 2px; }
     #logBoxesContainer::-webkit-scrollbar-track { background: #2c2c2c; }
@@ -127,162 +118,72 @@
     }
     li:last-child { margin-bottom: 0; }
 
-    .log-text-group {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
-    }
-
-    .date-tag {
-      color: #888;
-      font-size: 10px;
-      margin-right: 3px;
-    }
-
+    .log-text-group { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+    .date-tag { color: #888; font-size: 10px; margin-right: 3px; }
     .log-thumb {
-      width: 32px;
-      height: 32px;
-      object-fit: cover;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-right: 6px;
-      flex-shrink: 0;
-      border: 1px solid #444;
+      width: 32px; height: 32px; object-fit: cover; border-radius: 4px;
+      cursor: pointer; margin-right: 6px; flex-shrink: 0; border: 1px solid #444;
     }
-
-    .log-item-left {
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-    }
-
+    .log-item-left { display: flex; align-items: center; overflow: hidden; }
     .btn-delete { 
-      background: #e53935; 
-      color: #fff; 
-      border: none; 
-      padding: 3px 6px; 
-      border-radius: 4px; 
-      cursor: pointer; 
-      font-size: 10px; 
-      width: auto;
-      margin-top: 0;
-      margin-left: 4px;
-      flex-shrink: 0;
+      background: #e53935; color: #fff; border: none; padding: 3px 6px; 
+      border-radius: 4px; cursor: pointer; font-size: 10px; width: auto;
+      margin-top: 0; margin-left: 4px; flex-shrink: 0;
     }
     .empty-text { color: #555; font-size: 12px; text-align: center; margin: auto 0; padding: 15px 0; }
 
-    /* 이미지 크게보기 모달 */
+    /* 모달 스타일 */
     #imageModal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
-      box-sizing: border-box;
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box;
     }
-    #imageModal img {
-      max-width: 100%;
-      max-height: 80vh;
-      border-radius: 8px;
-    }
-    #imageModal span {
-      position: absolute;
-      top: 20px; right: 25px;
-      color: #fff; font-size: 28px; font-weight: bold;
-      cursor: pointer;
-    }
+    #imageModal img { max-width: 100%; max-height: 80vh; border-radius: 8px; }
+    #imageModal span { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 28px; font-weight: bold; cursor: pointer; }
 
     /* 쿠팡 파트너스 추천 스타일 */
-    .recommend-card {
-      background: #1e1e1e;
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 15px;
-      border: 1px solid #333;
-    }
-    .recommend-title {
-      font-size: 13px;
-      font-weight: bold;
-      color: #64b5f6;
-      margin-bottom: 10px;
-    }
-    .recommend-item {
-      background: #2c2c2c;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .recommend-icon {
-      width: 40px;
-      height: 40px;
-      background: #383838;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    .recommend-info {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      overflow: hidden;
-    }
-    .recommend-info a {
-      color: #4caf50;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 13px;
-      line-height: 1.3;
-    }
-    .recommend-desc {
-      color: #aaa;
-      font-size: 11px;
-    }
-    .coupang-notice {
-      font-size: 10px;
-      color: #777;
-      margin-top: 8px;
-      line-height: 1.3;
-    }
+    .recommend-card { background: #1e1e1e; padding: 12px; border-radius: 10px; margin-top: 15px; border: 1px solid #333; }
+    .recommend-title { font-size: 13px; font-weight: bold; color: #64b5f6; margin-bottom: 10px; }
+    .recommend-item { background: #2c2c2c; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .recommend-icon { width: 40px; height: 40px; background: #383838; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .recommend-info { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+    .recommend-info a { color: #4caf50; text-decoration: none; font-weight: bold; font-size: 13px; line-height: 1.3; }
+    .recommend-desc { color: #aaa; font-size: 11px; }
+    .coupang-notice { font-size: 10px; color: #777; margin-top: 8px; line-height: 1.3; }
 
-    .backup-card {
+    .backup-card { background: #1e1e1e; padding: 12px; border-radius: 10px; margin-top: 15px; border: 1px solid #333; }
+    .backup-btn-group { display: flex; gap: 8px; margin-top: 6px; }
+    .btn-backup { background: #2196f3; color: #fff; font-size: 12px; font-weight: bold; border: none; cursor: pointer; padding: 8px; }
+    .btn-restore { background: #ff9800; color: #fff; font-size: 12px; font-weight: bold; border: none; cursor: pointer; padding: 8px; }
+
+    /* 하단 탭 네비게이션 바 */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      max-width: 500px; margin: 0 auto;
+      background: #1e1e1e; border-top: 1px solid #333;
+      display: flex; height: 55px; z-index: 1000;
+    }
+    .nav-btn {
+      flex: 1; background: none; border: none; color: #777;
+      font-size: 12px; font-weight: bold; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    }
+    .nav-btn.active { color: #4caf50; }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* 그래프 카드 스타일 */
+    .chart-card {
       background: #1e1e1e;
       padding: 12px;
       border-radius: 10px;
-      margin-top: 15px;
+      margin-bottom: 12px;
       border: 1px solid #333;
     }
-    .backup-btn-group {
-      display: flex;
-      gap: 8px;
-      margin-top: 6px;
-    }
-    .btn-backup {
-      background: #2196f3;
-      color: #fff;
-      font-size: 12px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      padding: 8px;
-    }
-    .btn-restore {
-      background: #ff9800;
-      color: #fff;
-      font-size: 12px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      padding: 8px;
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 200px;
     }
   </style>
 </head>
@@ -290,34 +191,103 @@
 
   <h1>나의 헬스 증량 메모장</h1>
 
-  <div class="input-card">
-    <label for="category">운동 부위 선택</label>
-    <select id="category" onchange="onCategoryChange()">
-      <option value="가슴">가슴</option>
-      <option value="등">등</option>
-      <option value="하체">하체</option>
-      <option value="어깨">어깨</option>
-      <option value="팔">팔</option>
-      <option value="유산소">유산소</option>
-    </select>
+  <!-- 탭 1: 운동 기록 화면 -->
+  <div id="tab-workout" class="tab-content active">
+    <div class="input-card">
+      <label for="category">운동 부위 선택</label>
+      <select id="category" onchange="onCategoryChange()">
+        <option value="가슴">가슴</option>
+        <option value="등">등</option>
+        <option value="하체">하체</option>
+        <option value="어깨">어깨</option>
+        <option value="팔">팔</option>
+        <option value="유산소">유산소</option>
+      </select>
 
-    <div id="dynamicInputs"></div>
+      <div id="dynamicInputs"></div>
 
-    <button class="btn-add" id="saveBtn" onclick="addLog()">기록 저장하기</button>
+      <button class="btn-add" id="saveBtn" onclick="addLog()">기록 저장하기</button>
+    </div>
+
+    <div class="section-title">운동 기록 목록</div>
+    <div id="logBoxesContainer"></div>
+
+    <div class="recommend-card" id="recommendContainer"></div>
+
+    <div class="backup-card">
+      <label>간편 데이터 백업 / 복원</label>
+      <div class="backup-btn-group">
+        <button class="btn-backup" onclick="exportToShare()">카톡/메모장에 백업</button>
+        <button class="btn-restore" onclick="importFromText()">코드로 불러오기</button>
+      </div>
+    </div>
   </div>
 
-  <div class="section-title">운동 기록 목록</div>
-  <div id="logBoxesContainer"></div>
+  <!-- 탭 2: 신체 변화 & 그래프 화면 -->
+  <div id="tab-stats" class="tab-content">
+    <div class="input-card">
+      <div class="section-title" style="margin-top:0;">신체 변화 및 3대 측정 기록</div>
+      
+      <div class="input-row">
+        <div class="input-col">
+          <label>몸무게 (kg)</label>
+          <input type="text" id="statWeight" placeholder="예: 70.5">
+        </div>
+        <div class="input-col">
+          <label>골격근량 (kg)</label>
+          <input type="text" id="statMuscle" placeholder="예: 32.0">
+        </div>
+        <div class="input-col">
+          <label>BMI</label>
+          <input type="text" id="statBmi" placeholder="예: 22.5">
+        </div>
+      </div>
 
-  <!-- 자동 쿠팡 파트너스 추천 카드 -->
-  <div class="recommend-card" id="recommendContainer"></div>
+      <div class="input-row" style="margin-top:8px;">
+        <div class="input-col">
+          <label>벤치프레스 (kg)</label>
+          <input type="text" id="statBench" placeholder="예: 80">
+        </div>
+        <div class="input-col">
+          <label>스쿼트 (kg)</label>
+          <input type="text" id="statSquat" placeholder="예: 100">
+        </div>
+        <div class="input-col">
+          <label>데드리프트 (kg)</label>
+          <input type="text" id="statDead" placeholder="예: 120">
+        </div>
+      </div>
 
-  <div class="backup-card">
-    <label>간편 데이터 백업 / 복원</label>
-    <div class="backup-btn-group">
-      <button class="btn-backup" onclick="exportToShare()">카톡/메모장에 백업</button>
-      <button class="btn-restore" onclick="importFromText()">코드로 불러오기</button>
+      <button class="btn-add" onclick="addStatRecord()" style="margin-top:10px;">체형/3대 기록 저장하기</button>
     </div>
+
+    <!-- 그래프 1: 체중 및 근육량 -->
+    <div class="chart-card">
+      <div class="recommend-title">체중 및 골격근량 변화 추이</div>
+      <div class="chart-container">
+        <canvas id="bodyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 그래프 2: 3대 운동 기록 -->
+    <div class="chart-card">
+      <div class="recommend-title">3대 운동 중량 변화 추이</div>
+      <div class="chart-container">
+        <canvas id="big3Chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 네비게이션 탭 바 -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab('tab-workout', this)">
+      <span>🏋️‍♂️</span>
+      <span>운동 기록</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-stats', this)">
+      <span>📈</span>
+      <span>신체 변화 & 그래프</span>
+    </button>
   </div>
 
   <!-- 이미지 확대보기 모달 -->
@@ -336,18 +306,26 @@
       '유산소': [{ title: '잠스트 카프 슬리브 (종아리 보호대)', desc: '러닝 및 유산소 운동 시 종아리 피로도 감소', link: 'https://link.coupang.com/a/fOkZAgsjJs', icon: '👟' }]
     };
 
-    const categories = [
-      { name: '가슴' },
-      { name: '등' },
-      { name: '하체' },
-      { name: '어깨' },
-      { name: '팔' },
-      { name: '유산소' }
-    ];
+    const categories = [{ name: '가슴' }, { name: '등' }, { name: '하체' }, { name: '어깨' }, { name: '팔' }, { name: '유산소' }];
+
+    let bodyChartInstance = null;
+    let big3ChartInstance = null;
 
     function getTodayFormatted() {
       const today = new Date();
       return `${today.getMonth() + 1}/${today.getDate()}`;
+    }
+
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
+
+      if (tabId === 'tab-stats') {
+        renderCharts();
+      }
     }
 
     function onCategoryChange() {
@@ -401,52 +379,30 @@
 
         <div class="input-row">
           ${isCardio ? `
-            <div class="input-col">
-              <label>운동 시간</label>
-              <input type="text" id="time" placeholder="예: 30분">
-            </div>
-            <div class="input-col">
-              <label>소모 칼로리</label>
-              <input type="text" id="calories" placeholder="예: 300kcal">
-            </div>
-            <div class="input-col">
-              <label>강도 / 속도</label>
-              <input type="text" id="intensity" placeholder="예: Level 8">
-            </div>
+            <div class="input-col"><label>운동 시간</label><input type="text" id="time" placeholder="예: 30분"></div>
+            <div class="input-col"><label>소모 칼로리</label><input type="text" id="calories" placeholder="예: 300kcal"></div>
+            <div class="input-col"><label>강도 / 속도</label><input type="text" id="intensity" placeholder="예: Level 8"></div>
           ` : `
-            <div class="input-col">
-              <label>무게</label>
-              <input type="text" id="weight" placeholder="예: 60kg">
-            </div>
-            <div class="input-col">
-              <label>횟수</label>
-              <input type="text" id="reps" placeholder="예: 12회">
-            </div>
-            <div class="input-col">
-              <label>세트</label>
-              <input type="text" id="sets" placeholder="예: 3세트">
-            </div>
+            <div class="input-col"><label>무게</label><input type="text" id="weight" placeholder="예: 60kg"></div>
+            <div class="input-col"><label>횟수</label><input type="text" id="reps" placeholder="예: 12회"></div>
+            <div class="input-col"><label>세트</label><input type="text" id="sets" placeholder="예: 3세트"></div>
           `}
         </div>
       `;
     }
 
     function getLogs() {
-      try {
-        return JSON.parse(localStorage.getItem('gym_logs_v4') || '[]');
-      } catch (e) {
-        return [];
-      }
+      try { return JSON.parse(localStorage.getItem('gym_logs_v4') || '[]'); } catch (e) { return []; }
+    }
+    function saveLogs(logs) {
+      try { localStorage.setItem('gym_logs_v4', JSON.stringify(logs)); return true; } catch (e) { alert("저장 공간이 부족합니다."); return false; }
     }
 
-    function saveLogs(logs) {
-      try {
-        localStorage.setItem('gym_logs_v4', JSON.stringify(logs));
-        return true;
-      } catch (e) {
-        alert("저장 공간이 부족합니다. 사진 용량이 클 수 있습니다.");
-        return false;
-      }
+    function getStats() {
+      try { return JSON.parse(localStorage.getItem('gym_stats_v1') || '[]'); } catch (e) { return []; }
+    }
+    function saveStats(stats) {
+      try { localStorage.setItem('gym_stats_v1', JSON.stringify(stats)); return true; } catch (e) { return false; }
     }
 
     function resizeImage(file, callback) {
@@ -457,24 +413,11 @@
         img.src = event.target.result;
         img.onload = function() {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 400;
-          const MAX_HEIGHT = 400;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-          canvas.width = width;
-          canvas.height = height;
+          const MAX_WIDTH = 400; const MAX_HEIGHT = 400;
+          let width = img.width; let height = img.height;
+          if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
+          else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+          canvas.width = width; canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
           callback(canvas.toDataURL('image/jpeg', 0.7));
@@ -483,14 +426,9 @@
     }
 
     function addLog() {
-      const categoryEl = document.getElementById('category');
-      const category = categoryEl ? categoryEl.value : '가슴';
-      
-      const exerciseEl = document.getElementById('exercise');
-      const exercise = exerciseEl ? exerciseEl.value.trim() : '';
-
-      const photoInput = document.getElementById('photoInput');
-      const file = photoInput && photoInput.files[0] ? photoInput.files[0] : null;
+      const category = document.getElementById('category').value;
+      const exercise = document.getElementById('exercise').value.trim();
+      const file = document.getElementById('photoInput').files[0] || null;
 
       if (!exercise && !file) {
         alert('운동 이름 또는 사진 첨부 중 하나는 필수로 입력해야 합니다!');
@@ -498,58 +436,28 @@
       }
 
       const processLogData = (photoBase64) => {
-        const logData = { 
-          id: Date.now(),
-          category, 
-          exercise,
-          photo: photoBase64 || null,
-          dateStr: getTodayFormatted()
-        };
+        const logData = { id: Date.now(), category, exercise, photo: photoBase64 || null, dateStr: getTodayFormatted() };
 
         if (category === '유산소') {
           const time = document.getElementById('time').value.trim();
           const calories = document.getElementById('calories').value.trim();
           const intensity = document.getElementById('intensity').value.trim();
-
-          if (!time || !calories) {
-            alert('운동 시간과 소모 칼로리를 입력해주세요!');
-            return;
-          }
-          logData.time = time;
-          logData.calories = calories;
-          logData.intensity = intensity;
-          logData.isCardio = true;
+          if (!time || !calories) { alert('운동 시간과 소모 칼로리를 입력해주세요!'); return; }
+          logData.time = time; logData.calories = calories; logData.intensity = intensity; logData.isCardio = true;
         } else {
           const weight = document.getElementById('weight').value.trim();
           const reps = document.getElementById('reps').value.trim();
           const sets = document.getElementById('sets').value.trim();
-
-          if (!weight || !reps || !sets) {
-            alert('무게, 횟수, 세트를 모두 입력해주세요!');
-            return;
-          }
-          logData.weight = weight;
-          logData.reps = reps;
-          logData.sets = sets;
-          logData.isCardio = false;
+          if (!weight || !reps || !sets) { alert('무게, 횟수, 세트를 모두 입력해주세요!'); return; }
+          logData.weight = weight; logData.reps = reps; logData.sets = sets; logData.isCardio = false;
         }
 
         const currentLogs = getLogs();
         currentLogs.push(logData);
-        
-        if (saveLogs(currentLogs)) {
-          renderInputFields();
-          loadLogs();
-        }
+        if (saveLogs(currentLogs)) { renderInputFields(); loadLogs(); alert('운동 기록이 저장되었습니다!'); }
       };
 
-      if (file) {
-        resizeImage(file, function(compressedDataUrl) {
-          processLogData(compressedDataUrl);
-        });
-      } else {
-        processLogData(null);
-      }
+      if (file) { resizeImage(file, processLogData); } else { processLogData(null); }
     }
 
     function loadLogs() {
@@ -564,19 +472,13 @@
         box.className = 'category-box';
 
         let contentHtml = `<div class="category-title">${cat.name}</div>`;
-
         if (catLogs.length === 0) {
           contentHtml += `<p class="empty-text">기록 없음</p>`;
         } else {
           contentHtml += '<ul>';
           catLogs.forEach(item => {
-            const detailText = item.isCardio 
-              ? `${item.time} / ${item.calories}${item.intensity ? ' / ' + item.intensity : ''}`
-              : `${item.weight} / ${item.reps} / ${item.sets}`;
-            
-            const dateLabel = item.dateStr || getTodayFormatted();
+            const detailText = item.isCardio ? `${item.time} / ${item.calories}` : `${item.weight} / ${item.reps} / ${item.sets}`;
             const thumbHtml = item.photo ? `<img src="${item.photo}" class="log-thumb" onclick="openModal('${item.photo}')">` : '';
-
             const nameHtml = item.exercise ? `<strong>${item.exercise}</strong>` : `<span style="color:#888; font-size:11px;">운동 기록</span>`;
 
             contentHtml += `
@@ -584,7 +486,7 @@
                 <div class="log-item-left">
                   ${thumbHtml}
                   <div class="log-text-group">
-                    <div><span class="date-tag">[${dateLabel}]</span>${nameHtml}</div>
+                    <div><span class="date-tag">[${item.dateStr}]</span>${nameHtml}</div>
                     <div style="color: #bbb; font-size: 11px;">${detailText}</div>
                   </div>
                 </div>
@@ -594,7 +496,6 @@
           });
           contentHtml += '</ul>';
         }
-
         box.innerHTML = contentHtml;
         container.appendChild(box);
       });
@@ -607,29 +508,117 @@
       loadLogs();
     }
 
-    function openModal(src) {
-      const modal = document.getElementById('imageModal');
-      const modalImg = document.getElementById('modalImg');
-      modalImg.src = src;
-      modal.style.display = 'flex';
+    function addStatRecord() {
+      const weight = document.getElementById('statWeight').value.trim();
+      const muscle = document.getElementById('statMuscle').value.trim();
+      const bmi = document.getElementById('statBmi').value.trim();
+      const bench = document.getElementById('statBench').value.trim();
+      const squat = document.getElementById('statSquat').value.trim();
+      const dead = document.getElementById('statDead').value.trim();
+
+      if (!weight && !muscle && !bench && !squat && !dead) {
+        alert('최소한 한 가지 이상의 데이터를 입력해주세요!');
+        return;
+      }
+
+      const newStat = {
+        id: Date.now(),
+        dateStr: getTodayFormatted(),
+        weight: weight ? parseFloat(weight) : null,
+        muscle: muscle ? parseFloat(muscle) : null,
+        bmi: bmi ? parseFloat(bmi) : null,
+        bench: bench ? parseFloat(bench) : null,
+        squat: squat ? parseFloat(squat) : null,
+        dead: dead ? parseFloat(dead) : null
+      };
+
+      const stats = getStats();
+      stats.push(newStat);
+      if (saveStats(stats)) {
+        alert('신체/3대 기록이 저장되었습니다!');
+        document.getElementById('statWeight').value = '';
+        document.getElementById('statMuscle').value = '';
+        document.getElementById('statBmi').value = '';
+        document.getElementById('statBench').value = '';
+        document.getElementById('statSquat').value = '';
+        document.getElementById('statDead').value = '';
+        renderCharts();
+      }
     }
 
+    function renderCharts() {
+      const stats = getStats();
+      const labels = stats.map(s => s.dateStr);
+
+      const weightData = stats.map(s => s.weight);
+      const muscleData = stats.map(s => s.muscle);
+      const benchData = stats.map(s => s.bench);
+      const squatData = stats.map(s => s.squat);
+      const deadData = stats.map(s => s.dead);
+
+      // 1. 체중 및 골격근량 차트
+      const ctxBody = document.getElementById('bodyChart').getContext('2d');
+      if (bodyChartInstance) bodyChartInstance.destroy();
+      bodyChartInstance = new Chart(ctxBody, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: '체중(kg)', data: weightData, borderColor: '#4caf50', backgroundColor: '#4caf50', tension: 0.1 },
+            { label: '근육량(kg)', data: muscleData, borderColor: '#2196f3', backgroundColor: '#2196f3', tension: 0.1 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#fff', font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#333' } },
+            y: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#333' } }
+          }
+        }
+      });
+
+      // 2. 3대 운동 차트
+      const ctxBig3 = document.getElementById('big3Chart').getContext('2d');
+      if (big3ChartInstance) big3ChartInstance.destroy();
+      big3ChartInstance = new Chart(ctxBig3, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: '벤치프레스', data: benchData, borderColor: '#ff9800', backgroundColor: '#ff9800', tension: 0.1 },
+            { label: '스쿼트', data: squatData, borderColor: '#e53935', backgroundColor: '#e53935', tension: 0.1 },
+            { label: '데드리프트', data: deadData, borderColor: '#9c27b0', backgroundColor: '#9c27b0', tension: 0.1 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#fff', font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#333' } },
+            y: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#333' } }
+          }
+        }
+      });
+    }
+
+    function openModal(src) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('imageModal').style.display = 'flex';
+    }
     function closeModal() {
       document.getElementById('imageModal').style.display = 'none';
     }
 
     async function exportToShare() {
       const logs = getLogs();
-      if (logs.length === 0) {
-        alert("백업할 운동 기록이 없습니다.");
-        return;
-      }
-      const jsonText = JSON.stringify(logs);
+      const stats = getStats();
+      const allData = { logs, stats };
+      const jsonText = JSON.stringify(allData);
       if (navigator.share) {
-        try {
-          await navigator.share({ title: '헬스 메모장 백업', text: jsonText });
-          return;
-        } catch (err) {}
+        try { await navigator.share({ title: '헬스 메모장 백업', text: jsonText }); return; } catch (err) {}
       }
       try {
         await navigator.clipboard.writeText(jsonText);
@@ -642,24 +631,31 @@
     function importFromText() {
       const codeInput = prompt("복사해둔 백업 코드를 붙여넣어 주세요:");
       if (!codeInput || !codeInput.trim()) return;
-
       try {
-        const importedLogs = JSON.parse(codeInput.trim());
-        if (!Array.isArray(importedLogs)) {
-          alert("형식이 올바르지 않습니다.");
-          return;
+        const parsed = JSON.parse(codeInput.trim());
+        let importedLogs = [];
+        let importedStats = [];
+
+        if (Array.isArray(parsed)) {
+          importedLogs = parsed; // 구버전 호환
+        } else {
+          importedLogs = parsed.logs || [];
+          importedStats = parsed.stats || [];
         }
-        if (!confirm(`총 ${importedLogs.length}개의 기록을 복원하시겠습니까?`)) return;
+
+        if (!confirm(`운동 기록 ${importedLogs.length개}, 신체 기록 ${importedStats.length}개를 복원하시겠습니까?`)) return;
 
         const currentLogs = getLogs();
-        for (const item of importedLogs) {
-          item.id = Date.now() + Math.random();
-          currentLogs.push(item);
-        }
-        if (saveLogs(currentLogs)) {
-          alert("복원 완료되었습니다!");
-          loadLogs();
-        }
+        const currentStats = getStats();
+
+        for (const item of importedLogs) { item.id = Date.now() + Math.random(); currentLogs.push(item); }
+        for (const item of importedStats) { item.id = Date.now() + Math.random(); currentStats.push(item); }
+
+        saveLogs(currentLogs);
+        saveStats(currentStats);
+        alert("복원 완료되었습니다!");
+        loadLogs();
+        renderCharts();
       } catch (err) {
         alert("오류가 발생했습니다.");
       }
