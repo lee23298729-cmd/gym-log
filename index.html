@@ -124,11 +124,16 @@
       width: 32px; height: 32px; object-fit: cover; border-radius: 4px;
       cursor: pointer; margin-right: 6px; flex-shrink: 0; border: 1px solid #444;
     }
-    .log-item-left { display: flex; align-items: center; overflow: hidden; }
+    .log-item-left { display: flex; align-items: center; overflow: hidden; width: 100%; }
+    
+    .btn-group { display: flex; gap: 4px; flex-shrink: 0; margin-left: 4px; }
+    .btn-edit { 
+      background: #2196f3; color: #fff; border: none; padding: 3px 6px; 
+      border-radius: 4px; cursor: pointer; font-size: 10px; width: auto;
+    }
     .btn-delete { 
       background: #e53935; color: #fff; border: none; padding: 3px 6px; 
       border-radius: 4px; cursor: pointer; font-size: 10px; width: auto;
-      margin-top: 0; margin-left: 4px; flex-shrink: 0;
     }
     .empty-text { color: #555; font-size: 12px; text-align: center; margin: auto 0; padding: 15px 0; }
 
@@ -324,6 +329,7 @@
     let benchChartInstance = null;
     let squatChartInstance = null;
     let deadChartInstance = null;
+    let editingLogId = null; // 현재 수정 중인 기록 ID
 
     function getTodayFormatted() {
       const today = new Date();
@@ -491,12 +497,48 @@
         } else {
           contentHtml += '<ul>';
           catLogs.forEach(item => {
-            const detailText = item.isCardio ? `${item.time} / ${item.calories}` : `${item.weight} / ${item.reps} / ${item.sets}`;
-            const thumbHtml = item.photo ? `<img src="${item.photo}" class="log-thumb" onclick="openModal('${item.photo}')">` : '';
-            const nameHtml = item.exercise ? `<strong>${item.exercise}</strong>` : `<span style="color:#888; font-size:11px;">운동 기록</span>`;
+            contentHtml += '<li>';
+            
+            if (editingLogId === item.id) {
+              // 수정 모드일 때 보여줄 입력 폼
+              if (item.isCardio) {
+                contentHtml += `
+                  <div style="width:100%; display:flex; flex-direction:column; gap:4px;">
+                    <input type="text" id="edit-ex-${item.id}" value="${item.exercise || ''}" placeholder="운동 이름" style="margin-bottom:2px; padding:4px; font-size:11px;">
+                    <div style="display:flex; gap:4px;">
+                      <input type="text" id="edit-time-${item.id}" value="${item.time}" placeholder="시간" style="margin-bottom:0; padding:4px; font-size:11px;">
+                      <input type="text" id="edit-cal-${item.id}" value="${item.calories}" placeholder="칼로리" style="margin-bottom:0; padding:4px; font-size:11px;">
+                      <input type="text" id="edit-int-${item.id}" value="${item.intensity || ''}" placeholder="강도" style="margin-bottom:0; padding:4px; font-size:11px;">
+                    </div>
+                    <div style="display:flex; gap:4px; margin-top:4px;">
+                      <button onclick="saveEditLog(${item.id})" style="background:#4caf50; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; flex:1; cursor:pointer;">저장</button>
+                      <button onclick="cancelEditLog()" style="background:#777; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; flex:1; cursor:pointer;">취소</button>
+                    </div>
+                  </div>
+                `;
+              } else {
+                contentHtml += `
+                  <div style="width:100%; display:flex; flex-direction:column; gap:4px;">
+                    <input type="text" id="edit-ex-${item.id}" value="${item.exercise || ''}" placeholder="운동 이름" style="margin-bottom:2px; padding:4px; font-size:11px;">
+                    <div style="display:flex; gap:4px;">
+                      <input type="text" id="edit-weight-${item.id}" value="${item.weight}" placeholder="무게" style="margin-bottom:0; padding:4px; font-size:11px;">
+                      <input type="text" id="edit-reps-${item.id}" value="${item.reps}" placeholder="횟수" style="margin-bottom:0; padding:4px; font-size:11px;">
+                      <input type="text" id="edit-sets-${item.id}" value="${item.sets}" placeholder="세트" style="margin-bottom:0; padding:4px; font-size:11px;">
+                    </div>
+                    <div style="display:flex; gap:4px; margin-top:4px;">
+                      <button onclick="saveEditLog(${item.id})" style="background:#4caf50; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; flex:1; cursor:pointer;">저장</button>
+                      <button onclick="cancelEditLog()" style="background:#777; color:#fff; border:none; padding:3px 6px; border-radius:4px; font-size:10px; flex:1; cursor:pointer;">취소</button>
+                    </div>
+                  </div>
+                `;
+              }
+            } else {
+              // 일반 보기 모드
+              const detailText = item.isCardio ? `${item.time} / ${item.calories}` : `${item.weight} / ${item.reps} / ${item.sets}`;
+              const thumbHtml = item.photo ? `<img src="${item.photo}" class="log-thumb" onclick="openModal('${item.photo}')">` : '';
+              const nameHtml = item.exercise ? `<strong>${item.exercise}</strong>` : `<span style="color:#888; font-size:11px;">운동 기록</span>`;
 
-            contentHtml += `
-              <li>
+              contentHtml += `
                 <div class="log-item-left">
                   ${thumbHtml}
                   <div class="log-text-group">
@@ -504,15 +546,63 @@
                     <div style="color: #bbb; font-size: 11px;">${detailText}</div>
                   </div>
                 </div>
-                <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
-              </li>
-            `;
+                <div class="btn-group">
+                  <button class="btn-edit" onclick="startEditLog(${item.id})">수정</button>
+                  <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
+                </div>
+              `;
+            }
+
+            contentHtml += '</li>';
           });
           contentHtml += '</ul>';
         }
         box.innerHTML = contentHtml;
         container.appendChild(box);
       });
+    }
+
+    function startEditLog(id) {
+      editingLogId = id;
+      loadLogs();
+    }
+
+    function cancelEditLog() {
+      editingLogId = null;
+      loadLogs();
+    }
+
+    function saveEditLog(id) {
+      let logs = getLogs();
+      const index = logs.findIndex(item => item.id === id);
+      if (index === -1) return;
+
+      const exercise = document.getElementById(`edit-ex-${id}`).value.trim();
+
+      if (logs[index].isCardio) {
+        const time = document.getElementById(`edit-time-${id}`).value.trim();
+        const calories = document.getElementById(`edit-cal-${id}`).value.trim();
+        const intensity = document.getElementById(`edit-int-${id}`).value.trim();
+        if (!time || !calories) { alert('운동 시간과 소모 칼로리를 입력해주세요!'); return; }
+        logs[index].exercise = exercise;
+        logs[index].time = time;
+        logs[index].calories = calories;
+        logs[index].intensity = intensity;
+      } else {
+        const weight = document.getElementById(`edit-weight-${id}`).value.trim();
+        const reps = document.getElementById(`edit-reps-${id}`).value.trim();
+        const sets = document.getElementById(`edit-sets-${id}`).value.trim();
+        if (!weight || !reps || !sets) { alert('무게, 횟수, 세트를 모두 입력해주세요!'); return; }
+        logs[index].exercise = exercise;
+        logs[index].weight = weight;
+        logs[index].reps = reps;
+        logs[index].sets = sets;
+      }
+
+      if (saveLogs(logs)) {
+        editingLogId = null;
+        loadLogs();
+      }
     }
 
     function deleteLog(id) {
