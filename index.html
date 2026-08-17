@@ -113,10 +113,11 @@
     <div id="logBoxesContainer"></div>
     <div class="recommend-card" id="recommendContainer"></div>
     <div class="backup-card">
-      <label>간편 데이터 백업 / 복원</label>
+      <label>데이터 파일 백업 / 복원</label>
       <div class="backup-btn-group">
-        <button class="btn-backup" onclick="exportToShare()">카톡/메모장에 백업</button>
-        <button class="btn-restore" onclick="importFromText()">코드로 불러오기</button>
+        <button class="btn-backup" onclick="exportJsonFile()">파일 다운로드 (백업)</button>
+        <button class="btn-restore" onclick="document.getElementById('importFile').click()">파일 업로드 (복원)</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJsonFile(event)">
       </div>
     </div>
   </div>
@@ -414,6 +415,9 @@
         ${!isCardio ? `
           <div class="volume-info">
             <span id="currentVolumeText">입력 볼륨: 0 kg</span>
+            <span id="estimated1RMText">예상 1RM: 0 kg</span>
+          </div>
+          <div class="volume-info" style="margin-top:-4px;">
             <span id="todayTotalVolumeText">오늘 총 볼륨: 0 kg</span>
           </div>
         ` : ''}
@@ -426,6 +430,7 @@
       const rEl = document.getElementById('reps');
       const sEl = document.getElementById('sets');
       const curVolText = document.getElementById('currentVolumeText');
+      const est1RMText = document.getElementById('estimated1RMText');
       const totVolText = document.getElementById('todayTotalVolumeText');
       
       if (!wEl || !rEl || !sEl) return;
@@ -435,7 +440,13 @@
       const s = parseFloat(sEl.value) || 0;
       const currentVol = w * r * s;
       
+      let estimated1RM = 0;
+      if (w > 0 && r > 0) {
+        estimated1RM = Math.round(w * (1 + r / 30));
+      }
+      
       if (curVolText) curVolText.innerText = `입력 볼륨: ${currentVol.toLocaleString()} kg`;
+      if (est1RMText) est1RMText.innerText = `예상 1RM: ${estimated1RM.toLocaleString()} kg`;
       
       const logs = getLogs();
       const todayStr = getTodayFormatted();
@@ -615,8 +626,36 @@
     
     function openModal(src) { document.getElementById('modalImg').src = src; document.getElementById('imageModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('imageModal').style.display = 'none'; }
-    async function exportToShare() { const json = JSON.stringify({ logs: getLogs(), stats: getStats() }); navigator.clipboard.writeText(json); alert("데이터가 복사되었습니다!"); }
-    function importFromText() { const code = prompt("백업 코드:"); if (code) { const d = JSON.parse(code); saveLogs(d.logs); saveStats(d.stats); loadLogs(); renderInputFields(); } }
+    
+    function exportJsonFile() {
+      const data = { logs: getLogs(), stats: getStats() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gym_backup_${getTodayFormatted().replace('/', '_')}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJsonFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.logs) saveLogs(data.logs);
+          if (data.stats) saveStats(data.stats);
+          loadLogs();
+          renderInputFields();
+          alert('데이터 복원이 완료되었습니다.');
+        } catch (err) {
+          alert('올바른 백업 파일이 아닙니다.');
+        }
+      };
+      reader.readAsText(file);
+    }
 
     renderInputFields(); renderRecommendations(); loadLogs();
   </script>
