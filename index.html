@@ -22,454 +22,147 @@
     label { display: block; font-size: 11px; color: #aaa; margin-bottom: 3px; }
     input, select, button { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; font-size: 12px; }
     input, select { background: #2c2c2c; color: #fff; margin-bottom: 8px; }
-    input::placeholder { color: #777; }
-    .input-row { display: flex; gap: 5px; }
-    .input-col { flex: 1; min-width: 0; }
-    button.btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; cursor: pointer; margin-top: 4px; font-size: 14px; padding: 10px; }
-    button.btn-add:active { background: #388e3c; }
+    button { cursor: pointer; }
+    .btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; margin-top: 4px; font-size: 14px; padding: 10px; }
+    
+    /* Timer Style */
+    .timer-card { background: #252525; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #444; text-align: center; }
+    .timer-display { font-size: 24px; font-weight: bold; font-family: monospace; color: #4caf50; margin: 5px 0; }
+    .timer-btns { display: flex; gap: 5px; }
+    .timer-btns button { flex: 1; padding: 6px; font-size: 12px; }
+
     .volume-info { background: #252525; padding: 8px 10px; border-radius: 6px; margin-bottom: 8px; font-size: 11px; color: #4caf50; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
-    #logBoxesContainer { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-    #logBoxesContainer::-webkit-scrollbar { height: 4px; }
-    #logBoxesContainer::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 2px; }
-    #logBoxesContainer::-webkit-scrollbar-track { background: #2c2c2c; }
-    .category-box { flex: 0 0 250px; scroll-snap-align: start; background: #1e1e1e; border: 1px solid #2d2d2d; border-radius: 8px; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; }
-    .category-title { font-size: 15px; font-weight: bold; color: #4caf50; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }
-    ul { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
-    li { background: #2c2c2c; padding: 6px 8px; border-radius: 6px; margin-bottom: 6px; display: flex; flex-direction: column; font-size: 12px; }
-    li:last-child { margin-bottom: 0; }
-    .log-text-group { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
-    .date-tag { color: #888; font-size: 10px; margin-right: 3px; }
-    .log-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; cursor: pointer; margin-right: 6px; flex-shrink: 0; border: 1px solid #444; }
-    .log-item-left { display: flex; align-items: center; overflow: hidden; width: 100%; }
-    .btn-group { display: flex; gap: 4px; flex-shrink: 0; }
-    .btn-edit { background: #2196f3; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; width: auto; }
-    .btn-delete { background: #e53935; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; width: auto; }
-    #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
-    #imageModal img { max-width: 100%; max-height: 80vh; border-radius: 8px; }
-    #imageModal span { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 28px; font-weight: bold; cursor: pointer; }
-    .recommend-card { background: #1e1e1e; padding: 12px; border-radius: 10px; margin-top: 15px; border: 1px solid #333; }
-    .recommend-title { font-size: 13px; font-weight: bold; color: #64b5f6; margin-bottom: 10px; }
-    .recommend-item { background: #2c2c2c; padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
-    .recommend-info { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
-    .recommend-info a { color: #4caf50; text-decoration: none; font-weight: bold; font-size: 13px; line-height: 1.3; }
-    .recommend-desc { color: #aaa; font-size: 11px; }
-    .backup-card { background: #1e1e1e; padding: 12px; border-radius: 10px; margin-top: 15px; border: 1px solid #333; }
-    .backup-btn-group { display: flex; gap: 8px; margin-top: 6px; }
-    .btn-backup { background: #2196f3; color: #fff; font-size: 12px; font-weight: bold; border: none; cursor: pointer; padding: 8px; }
-    .btn-restore { background: #ff9800; color: #fff; font-size: 12px; font-weight: bold; border: none; cursor: pointer; padding: 8px; }
+    #logBoxesContainer { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; padding-bottom: 8px; }
+    .category-box { flex: 0 0 250px; background: #1e1e1e; border: 1px solid #2d2d2d; border-radius: 8px; padding: 12px; }
+    .category-title { font-size: 15px; font-weight: bold; color: #4caf50; margin-bottom: 8px; border-bottom: 1px solid #333; }
+    
+    /* Calendar Style */
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .cal-day { background: #1e1e1e; padding: 10px; text-align: center; border-radius: 4px; font-size: 12px; cursor: pointer; border: 1px solid #333; }
+    .cal-day.has-log { background: #2e7d32; }
+    .cal-header { text-align: center; font-weight: bold; margin-bottom: 10px; }
+
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; background: #1e1e1e; border-top: 1px solid #333; display: flex; height: 55px; z-index: 1000; }
-    .nav-btn { flex: 1; background: none; border: none; color: #777; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+    .nav-btn { flex: 1; background: none; border: none; color: #777; font-size: 12px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .nav-btn.active { color: #4caf50; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .chart-card { background: #1e1e1e; padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #333; }
-    .chart-container { position: relative; width: 100%; height: 160px; }
   </style>
 </head>
 <body>
 
   <h1>나의 헬스 증량 메모장</h1>
 
+  <!-- Workout Tab -->
   <div id="tab-workout" class="tab-content active">
+    <div class="timer-card">
+      <div id="timerDisplay" class="timer-display">00:00</div>
+      <div class="timer-btns">
+        <button onclick="toggleTimer()">시작/정지</button>
+        <button onclick="resetTimer()">초기화</button>
+      </div>
+    </div>
     <div class="input-card">
-      <label for="category">운동 부위 선택</label>
-      <select id="category" onchange="onCategoryChange()">
-        <option value="가슴">가슴</option>
-        <option value="등">등</option>
-        <option value="하체">하체</option>
-        <option value="어깨">어깨</option>
-        <option value="팔">팔</option>
-        <option value="유산소">유산소</option>
+      <label for="category">운동 부위</label>
+      <select id="category" onchange="renderInputFields()">
+        <option value="가슴">가슴</option><option value="등">등</option><option value="하체">하체</option>
+        <option value="어깨">어깨</option><option value="팔">팔</option><option value="유산소">유산소</option>
       </select>
       <div id="dynamicInputs"></div>
-      <button class="btn-add" id="saveBtn" onclick="addLog()">기록 저장하기</button>
+      <button class="btn-add" onclick="addLog()">기록 저장</button>
     </div>
-    <div class="section-title">운동 기록 목록</div>
     <div id="logBoxesContainer"></div>
-    <div class="recommend-card" id="recommendContainer"></div>
-    <div class="backup-card">
-      <label>간편 데이터 백업 / 복원</label>
-      <div class="backup-btn-group">
-        <button class="btn-backup" onclick="exportToShare()">카톡/메모장에 백업</button>
-        <button class="btn-restore" onclick="importFromText()">코드로 불러오기</button>
-      </div>
+  </div>
+
+  <!-- Stats Tab -->
+  <div id="tab-stats" class="tab-content">
+    <div class="input-card">
+      <div class="section-title">신체 기록</div>
+      <input type="text" id="statWeight" placeholder="몸무게 (kg)">
+      <button class="btn-add" onclick="addStatRecord()">저장</button>
     </div>
   </div>
 
-  <div id="tab-stats" class="tab-content">
+  <!-- Calendar Tab -->
+  <div id="tab-calendar" class="tab-content">
     <div class="input-card">
-      <div class="section-title" style="margin-top:0;">신체 변화 및 3대 측정 기록</div>
-      <div class="input-row">
-        <div class="input-col">
-          <label>몸무게 (kg)</label>
-          <input type="text" id="statWeight" placeholder="예: 70.5">
-        </div>
-        <div class="input-col">
-          <label>골격근량 (kg)</label>
-          <input type="text" id="statMuscle" placeholder="예: 32.0">
-        </div>
-        <div class="input-col">
-          <label>BMI</label>
-          <input type="text" id="statBmi" placeholder="예: 22.5">
-        </div>
-      </div>
-      <div class="input-row" style="margin-top:8px;">
-        <div class="input-col">
-          <label>벤치프레스 (kg)</label>
-          <input type="text" id="statBench" placeholder="예: 80">
-        </div>
-        <div class="input-col">
-          <label>스쿼트 (kg)</label>
-          <input type="text" id="statSquat" placeholder="예: 100">
-        </div>
-        <div class="input-col">
-          <label>데드리프트 (kg)</label>
-          <input type="text" id="statDead" placeholder="예: 120">
-        </div>
-      </div>
-      <button class="btn-add" onclick="addStatRecord()" style="margin-top:10px;">체형/3대 기록 저장하기</button>
-    </div>
-    <div class="chart-card">
-      <div class="recommend-title">체중 및 골격근량 변화 추이</div>
-      <div class="chart-container"> <canvas id="bodyChart"></canvas> </div>
-    </div>
-    <div class="chart-card">
-      <div class="recommend-title">벤치프레스 중량 변화 추이</div>
-      <div class="chart-container"> <canvas id="benchChart"></canvas> </div>
-    </div>
-    <div class="chart-card">
-      <div class="recommend-title">스쿼트 중량 변화 추이</div>
-      <div class="chart-container"> <canvas id="squatChart"></canvas> </div>
-    </div>
-    <div class="chart-card">
-      <div class="recommend-title">데드리프트 중량 변화 추이</div>
-      <div class="chart-container"> <canvas id="deadChart"></canvas> </div>
+      <div class="cal-header" id="calMonth"></div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div id="calLogs" style="margin-top:15px;"></div>
     </div>
   </div>
 
   <div class="bottom-nav">
-    <button class="nav-btn active" onclick="switchTab('tab-workout', this)">운동 기록</button>
+    <button class="nav-btn active" onclick="switchTab('tab-workout', this)">운동</button>
     <button class="nav-btn" onclick="switchTab('tab-stats', this)">그래프</button>
-  </div>
-
-  <div id="imageModal" onclick="closeModal()">
-    <span onclick="closeModal()">&times;</span>
-    <img id="modalImg" src="" alt="확대 이미지">
+    <button class="nav-btn" onclick="switchTab('tab-calendar', this)">달력</button>
   </div>
 
   <script>
-    const coupangProducts = {
-      '가슴': [{ title: '제로투히어로 프로 그립', desc: '등·가슴 운동 시 악력 보조 및 손목 부상 방지', link: 'https://link.coupang.com/a/fOkRPWX12a' }],
-      '등': [{ title: '베르사그립 프로', desc: '등·가슴 운동 자극 극대화 및 압도적 접지력', link: 'https://link.coupang.com/a/fOkUgNytvU' }],
-      '하체': [{ title: '제로투히어로 무릎 보호대 니랩', desc: '스쿼트 및 고중량 하체 운동 시 무릎 관절 보호', link: 'https://link.coupang.com/a/fOkW9oV4MK' }],
-      '어깨': [{ title: '베르사그립 프로', desc: '프레스 및 오버헤드 운동 시 그립 안정성', link: 'https://link.coupang.com/a/fOkUgNytvU' }],
-      '팔': [{ title: '뉴욕웨이 올에이지 단백질 보충제 2kg', desc: 'WPI · BCAA · 산양유 단백질 함유', link: 'https://link.coupang.com/a/fOkLORrxYG' }],
-      '유산소': [{ title: '잠스트 카프 슬리브', desc: '러닝 및 유산소 운동 시 종아리 피로도 감소', link: 'https://link.coupang.com/a/fOkZAgsjJs' }]
-    };
-
-    const categories = [{ name: '가슴' }, { name: '등' }, { name: '하체' }, { name: '어깨' }, { name: '팔' }, { name: '유산소' }];
-    
-    const routines = {
-      '하체 루틴': { category: '하체', exercise: '스쿼트' },
-      '가슴 루틴': { category: '가슴', exercise: '벤치 프레스' },
-      '등 루틴': { category: '등', exercise: '데드리프트' }
-    };
-
-    let editingLogId = null;
-    let chartInstances = {};
-
-    function getTodayFormatted() { const today = new Date(); return `${today.getMonth() + 1}/${today.getDate()}`; }
-    function getCurrentTime() { const now = new Date(); return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; }
-    
-    function getUniqueExercises() {
-      const logs = getLogs();
-      const exercises = new Set(logs.map(log => log.exercise).filter(name => name && name.trim() !== ''));
-      return Array.from(exercises);
+    // Timer Logic
+    let seconds = 0, timerInterval = null;
+    function toggleTimer() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      else { timerInterval = setInterval(() => { seconds++; updateTimerDisplay(); }, 1000); }
+    }
+    function resetTimer() { clearInterval(timerInterval); timerInterval = null; seconds = 0; updateTimerDisplay(); }
+    function updateTimerDisplay() {
+      const m = Math.floor(seconds/60), s = seconds%60;
+      document.getElementById('timerDisplay').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
 
-    function switchTab(tabId, btnElement) {
+    // App Logic
+    function getLogs() { return JSON.parse(localStorage.getItem('gym_logs_v4') || '[]'); }
+    function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
-      btnElement.classList.add('active');
-      if (tabId === 'tab-stats') renderCharts();
+      btn.classList.add('active');
+      if(tabId === 'tab-calendar') renderCalendar();
     }
 
-    function onCategoryChange() { renderInputFields(); renderRecommendations(); }
-    
-    function renderRecommendations() {
-      const category = document.getElementById('category').value;
-      const container = document.getElementById('recommendContainer');
-      const products = coupangProducts[category] || coupangProducts['가슴'];
-      let html = `<div class="recommend-title">[${category}] 추천 헬스 용품</div>`;
-      products.forEach(item => {
-        html += `
-          <div class="recommend-item">
-            <div class="recommend-info">
-              <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title}</a>
-              <div class="recommend-desc">${item.desc}</div>
-            </div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
-    function applyRoutine() {
-      const routineName = document.getElementById('routineSelect').value;
-      if (!routineName) return;
-      const routine = routines[routineName];
-      if (routine) {
-        document.getElementById('category').value = routine.category;
-        onCategoryChange();
-        document.getElementById('exercise').value = routine.exercise;
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      const logs = getLogs();
+      grid.innerHTML = '';
+      const days = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
+      for(let i=1; i<=days; i++) {
+        const d = document.createElement('div');
+        d.className = 'cal-day';
+        d.innerText = i;
+        if(logs.find(l => l.dateStr === `${new Date().getMonth()+1}/${i}`)) d.classList.add('has-log');
+        d.onclick = () => showLogsByDate(`${new Date().getMonth()+1}/${i}`);
+        grid.appendChild(d);
       }
+      document.getElementById('calMonth').innerText = new Date().getMonth()+1 + '월';
+    }
+
+    function showLogsByDate(date) {
+      const logs = getLogs().filter(l => l.dateStr === date);
+      document.getElementById('calLogs').innerHTML = `<strong>${date} 기록:</strong> ` + (logs.length ? logs.map(l => l.exercise).join(', ') : '없음');
     }
 
     function renderInputFields() {
-      const categoryVal = document.getElementById('category').value;
-      const container = document.getElementById('dynamicInputs');
-      const isCardio = (categoryVal === '유산소');
-      const uniqueExercises = getUniqueExercises();
-      
-      let datalistHtml = `<datalist id="exercise-list">`;
-      uniqueExercises.forEach(ex => datalistHtml += `<option value="${ex}">`);
-      datalistHtml += `</datalist>`;
-
-      let routineOptions = `<option value="">-- 루틴 불러오기 선택 --</option>`;
-      Object.keys(routines).forEach(rName => {
-        routineOptions += `<option value="${rName}">${rName}</option>`;
-      });
-
-      container.innerHTML = `
-        ${datalistHtml}
-        <label for="routineSelect">루틴 불러오기</label>
-        <select id="routineSelect" onchange="applyRoutine()">
-          ${routineOptions}
-        </select>
-        <div class="input-row">
-          <div class="input-col" style="flex: 2;"><label>운동 이름</label><input type="text" id="exercise" list="exercise-list" placeholder="예: 벤치프레스"></div>
-          <div class="input-col" style="flex: 1.5;"><label>사진 첨부</label><input type="file" id="photoInput" accept="image/*" style="font-size:11px; padding:6px;"></div>
-        </div>
-        <div class="input-row">
-          ${isCardio ? `
-            <div class="input-col"><label>운동 시간</label><input type="text" id="time" placeholder="30분"></div>
-            <div class="input-col"><label>칼로리</label><input type="text" id="calories" placeholder="300kcal"></div>
-            <div class="input-col"><label>강도</label><input type="text" id="intensity" placeholder="Level 8"></div>
-          ` : `
-            <div class="input-col"><label>무게</label><input type="text" id="weight" placeholder="60kg" oninput="updateVolumeCalc()"></div>
-            <div class="input-col"><label>횟수</label><input type="text" id="reps" placeholder="12회" oninput="updateVolumeCalc()"></div>
-            <div class="input-col"><label>세트</label><input type="text" id="sets" placeholder="3세트" oninput="updateVolumeCalc()"></div>
-          `}
-        </div>
-        ${!isCardio ? `
-          <div class="volume-info">
-            <span id="currentVolumeText">입력 볼륨: 0 kg</span>
-            <span id="todayTotalVolumeText">오늘 총 볼륨: 0 kg</span>
-          </div>
-        ` : ''}
-      `;
-      updateVolumeCalc();
-    }
-
-    function updateVolumeCalc() {
-      const wEl = document.getElementById('weight');
-      const rEl = document.getElementById('reps');
-      const sEl = document.getElementById('sets');
-      const curVolText = document.getElementById('currentVolumeText');
-      const totVolText = document.getElementById('todayTotalVolumeText');
-      
-      if (!wEl || !rEl || !sEl) return;
-      
-      const w = parseFloat(wEl.value) || 0;
-      const r = parseFloat(rEl.value) || 0;
-      const s = parseFloat(sEl.value) || 0;
-      const currentVol = w * r * s;
-      
-      if (curVolText) curVolText.innerText = `입력 볼륨: ${currentVol.toLocaleString()} kg`;
-      
-      const logs = getLogs();
-      const todayStr = getTodayFormatted();
-      let total = 0;
-      logs.forEach(log => {
-        if (log.dateStr === todayStr && !log.isCardio) {
-          const lw = parseFloat(log.weight) || 0;
-          const lr = parseFloat(log.reps) || 0;
-          const ls = parseFloat(log.sets) || 0;
-          total += (lw * lr * ls);
-        }
-      });
-      total += currentVol;
-      if (totVolText) totVolText.innerText = `오늘 총 볼륨: ${total.toLocaleString()} kg`;
-    }
-
-    function getLogs() { try { return JSON.parse(localStorage.getItem('gym_logs_v4') || '[]'); } catch (e) { return []; } }
-    function saveLogs(logs) { try { localStorage.setItem('gym_logs_v4', JSON.stringify(logs)); return true; } catch (e) { return false; } }
-    function getStats() { try { return JSON.parse(localStorage.getItem('gym_stats_v1') || '[]'); } catch (e) { return []; } }
-    function saveStats(stats) { try { localStorage.setItem('gym_stats_v1', JSON.stringify(stats)); return true; } catch (e) { return false; } }
-
-    function resizeImage(file, callback) {
-      const reader = new FileReader(); reader.readAsDataURL(file);
-      reader.onload = function(e) {
-        const img = new Image(); img.src = e.target.result;
-        img.onload = function() {
-          const canvas = document.createElement('canvas'); const MAX = 400;
-          let w = img.width, h = img.height;
-          if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } else { if (h > MAX) { w *= MAX / h; h = MAX; } }
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          callback(canvas.toDataURL('image/jpeg', 0.7));
-        }
-      }
+      const isCardio = document.getElementById('category').value === '유산소';
+      document.getElementById('dynamicInputs').innerHTML = isCardio ? 
+        `<input type="text" id="time" placeholder="운동 시간 (분)">` : 
+        `<input type="text" id="exercise" placeholder="운동 이름"><input type="text" id="weight" placeholder="무게 (kg)"><input type="text" id="reps" placeholder="횟수"><input type="text" id="sets" placeholder="세트">`;
     }
 
     function addLog() {
-      const category = document.getElementById('category').value;
-      const exercise = document.getElementById('exercise').value.trim();
-      const file = document.getElementById('photoInput').files[0] || null;
-      if (!exercise && !file) { alert('운동 이름 또는 사진을 입력하세요!'); return; }
-      
-      const processLogData = (photoBase64) => {
-        const logData = { id: Date.now(), category, exercise, photo: photoBase64, dateStr: getTodayFormatted(), timeStr: getCurrentTime() };
-        if (category === '유산소') {
-          logData.time = document.getElementById('time').value.trim();
-          logData.calories = document.getElementById('calories').value.trim();
-          logData.intensity = document.getElementById('intensity').value.trim();
-          logData.isCardio = true;
-        } else {
-          logData.weight = document.getElementById('weight').value.trim();
-          logData.reps = document.getElementById('reps').value.trim();
-          logData.sets = document.getElementById('sets').value.trim();
-          logData.isCardio = false;
-        }
-        const currentLogs = getLogs(); currentLogs.push(logData);
-        if (saveLogs(currentLogs)) { renderInputFields(); loadLogs(); alert('저장 완료!'); }
-      };
-      if (file) resizeImage(file, processLogData); else processLogData(null);
-    }
-
-    function loadLogs() {
       const logs = getLogs();
-      const container = document.getElementById('logBoxesContainer');
-      container.innerHTML = '';
-      categories.forEach(cat => {
-        const catLogs = logs.filter(log => log.category === cat.name);
-        const box = document.createElement('div'); box.className = 'category-box';
-        let html = `<div class="category-title">${cat.name}</div><ul>`;
-        
-        const groupedByExercise = {};
-        catLogs.forEach(item => {
-          const exName = item.exercise || '기타 운동';
-          if (!groupedByExercise[exName]) {
-            groupedByExercise[exName] = [];
-          }
-          groupedByExercise[exName].push(item);
-        });
-
-        Object.keys(groupedByExercise).forEach(exName => {
-          const items = groupedByExercise[exName];
-          html += `<li>`;
-          html += `<div style="font-weight: bold; color: #4caf50; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 2px; width: 100%;">${exName}</div>`;
-
-          items.forEach(item => {
-            if (editingLogId === item.id) {
-              html += `<div style="width:100%; display:flex; flex-direction:column; gap:4px; margin-top: 4px; margin-bottom: 4px;">
-                <input type="text" id="edit-ex-${item.id}" value="${item.exercise || ''}">
-                <div style="display:flex; gap:4px;">
-                  ${item.isCardio ? `<input type="text" id="edit-t-${item.id}" value="${item.time}"><input type="text" id="edit-c-${item.id}" value="${item.calories}">` 
-                  : `<input type="text" id="edit-w-${item.id}" value="${item.weight}"><input type="text" id="edit-r-${item.id}" value="${item.reps}"><input type="text" id="edit-s-${item.id}" value="${item.sets}">`}
-                </div>
-                <div style="display:flex; gap:4px; margin-top:4px;">
-                  <button onclick="saveEditLog(${item.id})" style="background:#4caf50; flex:1; border:none; padding:3px; color:#fff; border-radius:4px; cursor:pointer;">저장</button>
-                  <button onclick="cancelEditLog()" style="background:#777; flex:1; border:none; padding:3px; color:#fff; border-radius:4px; cursor:pointer;">취소</button>
-                </div>
-              </div>`;
-            } else {
-              const timeDisplay = item.timeStr ? ` ${item.timeStr}` : '';
-              html += `
-                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; margin-bottom: 2px;">
-                  <div class="log-item-left">
-                    ${item.photo ? `<img src="${item.photo}" class="log-thumb" onclick="openModal('${item.photo}')">` : ''}
-                    <div class="log-text-group">
-                      <div><span class="date-tag">[${item.dateStr}${timeDisplay}]</span></div>
-                      <div style="color: #bbb; font-size: 11px;">${item.isCardio ? `${item.time} / ${item.calories}` : `${item.weight} / ${item.reps} / ${item.sets}`}</div>
-                    </div>
-                  </div>
-                  <div class="btn-group">
-                    <button class="btn-edit" onclick="startEditLog(${item.id})">수정</button>
-                    <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
-                  </div>
-                </div>`;
-            }
-          });
-          html += `</li>`;
-        });
-
-        box.innerHTML = html + '</ul>';
-        container.appendChild(box);
-      });
+      const newLog = { 
+        id: Date.now(), 
+        dateStr: `${new Date().getMonth()+1}/${new Date().getDate()}`,
+        category: document.getElementById('category').value,
+        exercise: document.getElementById('category').value === '유산소' ? '유산소' : document.getElementById('exercise').value
+      };
+      logs.push(newLog);
+      localStorage.setItem('gym_logs_v4', JSON.stringify(logs));
+      alert('저장 완료');
     }
 
-    function startEditLog(id) { editingLogId = id; loadLogs(); }
-    function cancelEditLog() { editingLogId = null; loadLogs(); }
-    
-    function saveEditLog(id) {
-      let logs = getLogs();
-      const idx = logs.findIndex(i => i.id === id);
-      logs[idx].exercise = document.getElementById(`edit-ex-${id}`).value.trim();
-      logs[idx].timeStr = getCurrentTime();
-      if (logs[idx].isCardio) {
-        logs[idx].time = document.getElementById(`edit-t-${id}`).value.trim();
-        logs[idx].calories = document.getElementById(`edit-c-${id}`).value.trim();
-      } else {
-        logs[idx].weight = document.getElementById(`edit-w-${id}`).value.trim();
-        logs[idx].reps = document.getElementById(`edit-r-${id}`).value.trim();
-        logs[idx].sets = document.getElementById(`edit-s-${id}`).value.trim();
-      }
-      if (saveLogs(logs)) { editingLogId = null; loadLogs(); renderInputFields(); }
-    }
-    
-    function deleteLog(id) { saveLogs(getLogs().filter(i => i.id !== id)); loadLogs(); renderInputFields(); }
-    
-    function addStatRecord() {
-      const stats = getStats();
-      stats.push({
-        id: Date.now(),
-        dateStr: getTodayFormatted(),
-        weight: document.getElementById('statWeight').value,
-        muscle: document.getElementById('statMuscle').value,
-        bmi: document.getElementById('statBmi').value,
-        bench: document.getElementById('statBench').value,
-        squat: document.getElementById('statSquat').value,
-        dead: document.getElementById('statDead').value
-      });
-      saveStats(stats); alert('저장 완료!'); renderCharts();
-    }
-    
-    function renderCharts() {
-      const stats = getStats();
-      const labels = stats.map(s => s.dateStr);
-      const chartConfigs = [
-        { id: 'bodyChart', datasets: [{ label: '체중', data: stats.map(s => s.weight), borderColor: '#4caf50' }, { label: '근육', data: stats.map(s => s.muscle), borderColor: '#2196f3' }] },
-        { id: 'benchChart', datasets: [{ label: '벤치', data: stats.map(s => s.bench), borderColor: '#ff9800' }] },
-        { id: 'squatChart', datasets: [{ label: '스쿼트', data: stats.map(s => s.squat), borderColor: '#e53935' }] },
-        { id: 'deadChart', datasets: [{ label: '데드', data: stats.map(s => s.dead), borderColor: '#9c27b0' }] }
-      ];
-      chartConfigs.forEach(c => {
-        if (chartInstances[c.id]) {
-          chartInstances[c.id].destroy();
-        }
-        const ctx = document.getElementById(c.id).getContext('2d');
-        chartInstances[c.id] = new Chart(ctx, { type: 'line', data: { labels, datasets: c.datasets }, options: { responsive: true, maintainAspectRatio: false } });
-      });
-    }
-    
-    function openModal(src) { document.getElementById('modalImg').src = src; document.getElementById('imageModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('imageModal').style.display = 'none'; }
-    async function exportToShare() { const json = JSON.stringify({ logs: getLogs(), stats: getStats() }); navigator.clipboard.writeText(json); alert("데이터가 복사되었습니다!"); }
-    function importFromText() { const code = prompt("백업 코드:"); if (code) { const d = JSON.parse(code); saveLogs(d.logs); saveStats(d.stats); loadLogs(); renderInputFields(); } }
-
-    renderInputFields(); renderRecommendations(); loadLogs();
+    renderInputFields();
   </script>
 </body>
 </html>
