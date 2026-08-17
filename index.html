@@ -27,6 +27,7 @@
     .input-col { flex: 1; min-width: 0; }
     button.btn-add { background: #4caf50; color: #fff; font-weight: bold; border: none; cursor: pointer; margin-top: 4px; font-size: 14px; padding: 10px; }
     button.btn-add:active { background: #388e3c; }
+    .volume-info { background: #252525; padding: 8px 10px; border-radius: 6px; margin-bottom: 8px; font-size: 11px; color: #4caf50; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
     #logBoxesContainer { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
     #logBoxesContainer::-webkit-scrollbar { height: 4px; }
     #logBoxesContainer::-webkit-scrollbar-thumb { background: #4caf50; border-radius: 2px; }
@@ -167,6 +168,14 @@
     };
 
     const categories = [{ name: '가슴' }, { name: '등' }, { name: '하체' }, { name: '어깨' }, { name: '팔' }, { name: '유산소' }];
+    
+    // 루틴 정의
+    const routines = {
+      '하체 루틴': { category: '하체', exercise: '스쿼트' },
+      '가슴 루틴': { category: '가슴', exercise: '벤치 프레스' },
+      '등 루틴': { category: '등', exercise: '데드리프트' }
+    };
+
     let editingLogId = null;
 
     function getTodayFormatted() { const today = new Date(); return `${today.getMonth() + 1}/${today.getDate()}`; }
@@ -187,6 +196,7 @@
     }
 
     function onCategoryChange() { renderInputFields(); renderRecommendations(); }
+    
     function renderRecommendations() {
       const category = document.getElementById('category').value;
       const container = document.getElementById('recommendContainer');
@@ -205,6 +215,17 @@
       container.innerHTML = html;
     }
 
+    function applyRoutine() {
+      const routineName = document.getElementById('routineSelect').value;
+      if (!routineName) return;
+      const routine = routines[routineName];
+      if (routine) {
+        document.getElementById('category').value = routine.category;
+        onCategoryChange();
+        document.getElementById('exercise').value = routine.exercise;
+      }
+    }
+
     function renderInputFields() {
       const categoryVal = document.getElementById('category').value;
       const container = document.getElementById('dynamicInputs');
@@ -215,8 +236,17 @@
       uniqueExercises.forEach(ex => datalistHtml += `<option value="${ex}">`);
       datalistHtml += `</datalist>`;
 
+      let routineOptions = `<option value="">-- 루틴 불러오기 선택 --</option>`;
+      Object.keys(routines).forEach(rName => {
+        routineOptions += `<option value="${rName}">${rName}</option>`;
+      });
+
       container.innerHTML = `
         ${datalistHtml}
+        <label for="routineSelect">루틴 불러오기</label>
+        <select id="routineSelect" onchange="applyRoutine()">
+          ${routineOptions}
+        </select>
         <div class="input-row">
           <div class="input-col" style="flex: 2;"><label>운동 이름</label><input type="text" id="exercise" list="exercise-list" placeholder="예: 벤치프레스"></div>
           <div class="input-col" style="flex: 1.5;"><label>사진 첨부</label><input type="file" id="photoInput" accept="image/*" style="font-size:11px; padding:6px;"></div>
@@ -227,12 +257,50 @@
             <div class="input-col"><label>칼로리</label><input type="text" id="calories" placeholder="300kcal"></div>
             <div class="input-col"><label>강도</label><input type="text" id="intensity" placeholder="Level 8"></div>
           ` : `
-            <div class="input-col"><label>무게</label><input type="text" id="weight" placeholder="60kg"></div>
-            <div class="input-col"><label>횟수</label><input type="text" id="reps" placeholder="12회"></div>
-            <div class="input-col"><label>세트</label><input type="text" id="sets" placeholder="3세트"></div>
+            <div class="input-col"><label>무게</label><input type="text" id="weight" placeholder="60kg" oninput="updateVolumeCalc()"></div>
+            <div class="input-col"><label>횟수</label><input type="text" id="reps" placeholder="12회" oninput="updateVolumeCalc()"></div>
+            <div class="input-col"><label>세트</label><input type="text" id="sets" placeholder="3세트" oninput="updateVolumeCalc()"></div>
           `}
         </div>
+        ${!isCardio ? `
+          <div class="volume-info">
+            <span id="currentVolumeText">입력 볼륨: 0 kg</span>
+            <span id="todayTotalVolumeText">오늘 총 볼륨: 0 kg</span>
+          </div>
+        ` : ''}
       `;
+      updateVolumeCalc();
+    }
+
+    function updateVolumeCalc() {
+      const wEl = document.getElementById('weight');
+      const rEl = document.getElementById('reps');
+      const sEl = document.getElementById('sets');
+      const curVolText = document.getElementById('currentVolumeText');
+      const totVolText = document.getElementById('todayTotalVolumeText');
+      
+      if (!wEl || !rEl || !sEl) return;
+      
+      const w = parseFloat(wEl.value) || 0;
+      const r = parseFloat(rEl.value) || 0;
+      const s = parseFloat(sEl.value) || 0;
+      const currentVol = w * r * s;
+      
+      if (curVolText) curVolText.innerText = `입력 볼륨: ${currentVol.toLocaleString()} kg`;
+      
+      const logs = getLogs();
+      const todayStr = getTodayFormatted();
+      let total = 0;
+      logs.forEach(log => {
+        if (log.dateStr === todayStr && !log.isCardio) {
+          const lw = parseFloat(log.weight) || 0;
+          const lr = parseFloat(log.reps) || 0;
+          const ls = parseFloat(log.sets) || 0;
+          total += (lw * lr * ls);
+        }
+      });
+      total += currentVol;
+      if (totVolText) totVolText.innerText = `오늘 총 볼륨: ${total.toLocaleString()} kg`;
     }
 
     function getLogs() { try { return JSON.parse(localStorage.getItem('gym_logs_v4') || '[]'); } catch (e) { return []; } }
@@ -289,7 +357,6 @@
         const box = document.createElement('div'); box.className = 'category-box';
         let html = `<div class="category-title">${cat.name}</div><ul>`;
         
-        // 운동 이름별로 그룹화
         const groupedByExercise = {};
         catLogs.forEach(item => {
           const exName = item.exercise || '기타 운동';
@@ -345,6 +412,7 @@
 
     function startEditLog(id) { editingLogId = id; loadLogs(); }
     function cancelEditLog() { editingLogId = null; loadLogs(); }
+    
     function saveEditLog(id) {
       let logs = getLogs();
       const idx = logs.findIndex(i => i.id === id);
@@ -360,12 +428,15 @@
       }
       if (saveLogs(logs)) { editingLogId = null; loadLogs(); renderInputFields(); }
     }
+    
     function deleteLog(id) { saveLogs(getLogs().filter(i => i.id !== id)); loadLogs(); renderInputFields(); }
+    
     function addStatRecord() {
       const stats = getStats();
       stats.push({ id: Date.now(), dateStr: getTodayFormatted(), weight: document.getElementById('statWeight').value, muscle: document.getElementById('statMuscle').value, bench: document.getElementById('statBench').value, squat: document.getElementById('statSquat').value, dead: document.getElementById('statDead').value });
       saveStats(stats); alert('저장 완료!'); renderCharts();
     }
+    
     function renderCharts() {
       const stats = getStats();
       const labels = stats.map(s => s.dateStr);
@@ -379,6 +450,7 @@
         new Chart(ctx, { type: 'line', data: { labels, datasets: c.datasets }, options: { responsive: true, maintainAspectRatio: false } });
       });
     }
+    
     function openModal(src) { document.getElementById('modalImg').src = src; document.getElementById('imageModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('imageModal').style.display = 'none'; }
     async function exportToShare() { const json = JSON.stringify({ logs: getLogs(), stats: getStats() }); navigator.clipboard.writeText(json); alert("데이터가 복사되었습니다!"); }
