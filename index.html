@@ -169,7 +169,6 @@
 
     const categories = [{ name: '가슴' }, { name: '등' }, { name: '하체' }, { name: '어깨' }, { name: '팔' }, { name: '유산소' }];
     
-    // 루틴 정의
     const routines = {
       '하체 루틴': { category: '하체', exercise: '스쿼트' },
       '가슴 루틴': { category: '가슴', exercise: '벤치 프레스' },
@@ -177,6 +176,7 @@
     };
 
     let editingLogId = null;
+    let chartInstances = {};
 
     function getTodayFormatted() { const today = new Date(); return `${today.getMonth() + 1}/${today.getDate()}`; }
     function getCurrentTime() { const now = new Date(); return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; }
@@ -433,21 +433,34 @@
     
     function addStatRecord() {
       const stats = getStats();
-      stats.push({ id: Date.now(), dateStr: getTodayFormatted(), weight: document.getElementById('statWeight').value, muscle: document.getElementById('statMuscle').value, bench: document.getElementById('statBench').value, squat: document.getElementById('statSquat').value, dead: document.getElementById('statDead').value });
+      stats.push({
+        id: Date.now(),
+        dateStr: getTodayFormatted(),
+        weight: document.getElementById('statWeight').value,
+        muscle: document.getElementById('statMuscle').value,
+        bmi: document.getElementById('statBmi').value,
+        bench: document.getElementById('statBench').value,
+        squat: document.getElementById('statSquat').value,
+        dead: document.getElementById('statDead').value
+      });
       saveStats(stats); alert('저장 완료!'); renderCharts();
     }
     
     function renderCharts() {
       const stats = getStats();
       const labels = stats.map(s => s.dateStr);
-      [
+      const chartConfigs = [
         { id: 'bodyChart', datasets: [{ label: '체중', data: stats.map(s => s.weight), borderColor: '#4caf50' }, { label: '근육', data: stats.map(s => s.muscle), borderColor: '#2196f3' }] },
         { id: 'benchChart', datasets: [{ label: '벤치', data: stats.map(s => s.bench), borderColor: '#ff9800' }] },
         { id: 'squatChart', datasets: [{ label: '스쿼트', data: stats.map(s => s.squat), borderColor: '#e53935' }] },
         { id: 'deadChart', datasets: [{ label: '데드', data: stats.map(s => s.dead), borderColor: '#9c27b0' }] }
-      ].forEach(c => {
+      ];
+      chartConfigs.forEach(c => {
+        if (chartInstances[c.id]) {
+          chartInstances[c.id].destroy();
+        }
         const ctx = document.getElementById(c.id).getContext('2d');
-        new Chart(ctx, { type: 'line', data: { labels, datasets: c.datasets }, options: { responsive: true, maintainAspectRatio: false } });
+        chartInstances[c.id] = new Chart(ctx, { type: 'line', data: { labels, datasets: c.datasets }, options: { responsive: true, maintainAspectRatio: false } });
       });
     }
     
