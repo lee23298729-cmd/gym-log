@@ -34,13 +34,13 @@
     .category-box { flex: 0 0 250px; scroll-snap-align: start; background: #1e1e1e; border: 1px solid #2d2d2d; border-radius: 8px; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; }
     .category-title { font-size: 15px; font-weight: bold; color: #4caf50; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }
     ul { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
-    li { background: #2c2c2c; padding: 6px 8px; border-radius: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+    li { background: #2c2c2c; padding: 6px 8px; border-radius: 6px; margin-bottom: 6px; display: flex; flex-direction: column; font-size: 12px; }
     li:last-child { margin-bottom: 0; }
     .log-text-group { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
     .date-tag { color: #888; font-size: 10px; margin-right: 3px; }
     .log-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; cursor: pointer; margin-right: 6px; flex-shrink: 0; border: 1px solid #444; }
     .log-item-left { display: flex; align-items: center; overflow: hidden; width: 100%; }
-    .btn-group { display: flex; gap: 4px; flex-shrink: 0; margin-left: 4px; }
+    .btn-group { display: flex; gap: 4px; flex-shrink: 0; }
     .btn-edit { background: #2196f3; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; width: auto; }
     .btn-delete { background: #e53935; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; width: auto; }
     #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
@@ -172,7 +172,6 @@
     function getTodayFormatted() { const today = new Date(); return `${today.getMonth() + 1}/${today.getDate()}`; }
     function getCurrentTime() { const now = new Date(); return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; }
     
-    // 유니크한 운동 이름만 가져오기
     function getUniqueExercises() {
       const logs = getLogs();
       const exercises = new Set(logs.map(log => log.exercise).filter(name => name && name.trim() !== ''));
@@ -289,37 +288,56 @@
         const catLogs = logs.filter(log => log.category === cat.name);
         const box = document.createElement('div'); box.className = 'category-box';
         let html = `<div class="category-title">${cat.name}</div><ul>`;
+        
+        // 운동 이름별로 그룹화
+        const groupedByExercise = {};
         catLogs.forEach(item => {
-          html += '<li>';
-          if (editingLogId === item.id) {
-            html += `<div style="width:100%; display:flex; flex-direction:column; gap:4px;">
-              <input type="text" id="edit-ex-${item.id}" value="${item.exercise || ''}">
-              <div style="display:flex; gap:4px;">
-                ${item.isCardio ? `<input type="text" id="edit-t-${item.id}" value="${item.time}"><input type="text" id="edit-c-${item.id}" value="${item.calories}">` 
-                : `<input type="text" id="edit-w-${item.id}" value="${item.weight}"><input type="text" id="edit-r-${item.id}" value="${item.reps}"><input type="text" id="edit-s-${item.id}" value="${item.sets}">`}
-              </div>
-              <div style="display:flex; gap:4px; margin-top:4px;">
-                <button onclick="saveEditLog(${item.id})" style="background:#4caf50; flex:1; border:none; padding:3px; color:#fff; border-radius:4px;">저장</button>
-                <button onclick="cancelEditLog()" style="background:#777; flex:1; border:none; padding:3px; color:#fff; border-radius:4px;">취소</button>
-              </div>
-            </div>`;
-          } else {
-            const timeDisplay = item.timeStr ? ` ${item.timeStr}` : '';
-            html += `
-              <div class="log-item-left">
-                ${item.photo ? `<img src="${item.photo}" class="log-thumb" onclick="openModal('${item.photo}')">` : ''}
-                <div class="log-text-group">
-                  <div><span class="date-tag">[${item.dateStr}${timeDisplay}]</span><strong>${item.exercise || ''}</strong></div>
-                  <div style="color: #bbb; font-size: 11px;">${item.isCardio ? `${item.time} / ${item.calories}` : `${item.weight} / ${item.reps} / ${item.sets}`}</div>
-                </div>
-              </div>
-              <div class="btn-group">
-                <button class="btn-edit" onclick="startEditLog(${item.id})">수정</button>
-                <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
-              </div>`;
+          const exName = item.exercise || '기타 운동';
+          if (!groupedByExercise[exName]) {
+            groupedByExercise[exName] = [];
           }
-          html += '</li>';
+          groupedByExercise[exName].push(item);
         });
+
+        Object.keys(groupedByExercise).forEach(exName => {
+          const items = groupedByExercise[exName];
+          html += `<li>`;
+          html += `<div style="font-weight: bold; color: #4caf50; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 2px; width: 100%;">${exName}</div>`;
+
+          items.forEach(item => {
+            if (editingLogId === item.id) {
+              html += `<div style="width:100%; display:flex; flex-direction:column; gap:4px; margin-top: 4px; margin-bottom: 4px;">
+                <input type="text" id="edit-ex-${item.id}" value="${item.exercise || ''}">
+                <div style="display:flex; gap:4px;">
+                  ${item.isCardio ? `<input type="text" id="edit-t-${item.id}" value="${item.time}"><input type="text" id="edit-c-${item.id}" value="${item.calories}">` 
+                  : `<input type="text" id="edit-w-${item.id}" value="${item.weight}"><input type="text" id="edit-r-${item.id}" value="${item.reps}"><input type="text" id="edit-s-${item.id}" value="${item.sets}">`}
+                </div>
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                  <button onclick="saveEditLog(${item.id})" style="background:#4caf50; flex:1; border:none; padding:3px; color:#fff; border-radius:4px; cursor:pointer;">저장</button>
+                  <button onclick="cancelEditLog()" style="background:#777; flex:1; border:none; padding:3px; color:#fff; border-radius:4px; cursor:pointer;">취소</button>
+                </div>
+              </div>`;
+            } else {
+              const timeDisplay = item.timeStr ? ` ${item.timeStr}` : '';
+              html += `
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; margin-bottom: 2px;">
+                  <div class="log-item-left">
+                    ${item.photo ? `<img src="${item.photo}" class="log-thumb" onclick="openModal('${item.photo}')">` : ''}
+                    <div class="log-text-group">
+                      <div><span class="date-tag">[${item.dateStr}${timeDisplay}]</span></div>
+                      <div style="color: #bbb; font-size: 11px;">${item.isCardio ? `${item.time} / ${item.calories}` : `${item.weight} / ${item.reps} / ${item.sets}`}</div>
+                    </div>
+                  </div>
+                  <div class="btn-group">
+                    <button class="btn-edit" onclick="startEditLog(${item.id})">수정</button>
+                    <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
+                  </div>
+                </div>`;
+            }
+          });
+          html += `</li>`;
+        });
+
         box.innerHTML = html + '</ul>';
         container.appendChild(box);
       });
