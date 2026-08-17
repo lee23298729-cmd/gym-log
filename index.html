@@ -53,7 +53,7 @@
     .date-tag { color: #888; font-size: 10px; margin-right: 3px; }
     .log-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; cursor: pointer; margin-right: 6px; flex-shrink: 0; border: 1px solid #444; }
     .log-item-left { display: flex; align-items: center; overflow: hidden; width: 100%; }
-    .btn-group { display: flex; gap: 4px; flex-shrink: 0; }
+    .btn-group { display: flex; gap: 4px; flex-shrink: 0; margin-top: 4px; justify-content: flex-end; }
     .btn-edit { background: #2196f3; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; width: auto; }
     .btn-delete { background: #e53935; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; width: auto; }
     
@@ -640,107 +640,172 @@
                 </div>
               </div>`;
             } else {
-              const timeDisplay = item.timeStr ? ` ${item.timeStr}` : '';
+              const timeDisplay = item.timeStr ? ` (${item.timeStr})` : '';
               const setsDisplay = formatSetsHtml(item);
               const memoDisplay = item.memo ? `<div style="color: #64b5f6; font-size: 11px; margin-top: 2px;">메모: ${item.memo}</div>` : '';
               html += `
-                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; margin-bottom: 2px;">
-                  <div class="log-item-left">
-                    ${item.photo ? `<img src="${item.photo}" class="log-thumb" onclick="openModal('${item.photo}')">` : ''}
-                    <div class="log-text-group">
-                      <div><span class="date-tag">[${item.dateStr}${timeDisplay}]</span></div>
-                      <div style="color: #bbb; font-size: 11px; line-height: 1.3;">${setsDisplay}</div>
-                      ${memoDisplay}
-                    </div>
+                <div class="log-item-left">
+                  ${item.photo ? `<img src="${item.photo}" class="log-thumb" onclick="openModal('${item.photo}')">` : ''}
+                  <div class="log-text-group">
+                    <div style="font-size: 11px;"><span class="date-tag">${item.dateStr}${timeDisplay}</span></div>
+                    <div style="font-size: 12px; color: #fff;">${setsDisplay}</div>
+                    ${memoDisplay}
                   </div>
-                  <div class="btn-group">
-                    <button class="btn-edit" onclick="startEditLog(${item.id})">수정</button>
-                    <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
-                  </div>
-                </div>`;
+                </div>
+                <div class="btn-group">
+                  <button class="btn-edit" onclick="startEditLog(${item.id})">수정</button>
+                  <button class="btn-delete" onclick="deleteLog(${item.id})">삭제</button>
+                </div>
+              `;
             }
+            html += `</li>`;
           });
-          html += `</li>`;
         });
-
-        box.innerHTML = html + '</ul>';
+        html += `</ul>`;
+        box.innerHTML = html;
         container.appendChild(box);
       });
     }
 
     function startEditLog(id) { editingLogId = id; loadLogs(); }
     function cancelEditLog() { editingLogId = null; loadLogs(); }
-    
     function saveEditLog(id) {
-      let logs = getLogs();
-      const idx = logs.findIndex(i => i.id === id);
+      const logs = getLogs();
+      const idx = logs.findIndex(l => l.id === id);
       if (idx === -1) return;
-      logs[idx].exercise = document.getElementById(`edit-ex-${id}`).value.trim();
-      logs[idx].memo = document.getElementById(`edit-memo-${id}`).value.trim();
-      logs[idx].timeStr = getCurrentTime();
-      
+      const exInput = document.getElementById(`edit-ex-${id}`);
+      const memoInput = document.getElementById(`edit-memo-${id}`);
+      if (exInput) logs[idx].exercise = exInput.value.trim();
+      if (memoInput) logs[idx].memo = memoInput.value.trim();
+
       if (logs[idx].isCardio) {
-        logs[idx].time = document.getElementById(`edit-t-${id}`).value.trim();
-        logs[idx].calories = document.getElementById(`edit-c-${id}`).value.trim();
+        const tInput = document.getElementById(`edit-t-${id}`);
+        const cInput = document.getElementById(`edit-c-${id}`);
+        if (tInput) logs[idx].time = tInput.value.trim();
+        if (cInput) logs[idx].calories = cInput.value.trim();
       } else {
-        const setsInputStr = document.getElementById(`edit-sets-${id}`).value.trim();
-        const parts = setsInputStr.split(',');
-        const setsList = [];
-        parts.forEach(p => {
-          const sub = p.trim().split('/');
-          if (sub.length >= 2) {
-            setsList.push({ weight: sub[0].trim(), reps: sub[1].trim() });
-          } else if (sub.length === 1 && sub[0].trim() !== '') {
-            setsList.push({ weight: sub[0].trim(), reps: '' });
-          }
-        });
-        if (setsList.length > 0) {
-          logs[idx].setsList = setsList;
+        const setsInput = document.getElementById(`edit-sets-${id}`);
+        if (setsInput) {
+          const parts = setsInput.value.split(',');
+          const newSets = [];
+          parts.forEach(part => {
+            const sub = part.split('/');
+            if (sub.length === 2) {
+              newSets.push({ weight: sub[0].trim(), reps: sub[1].trim() });
+            }
+          });
+          if (newSets.length > 0) logs[idx].setsList = newSets;
         }
       }
-      if (saveLogs(logs)) { editingLogId = null; loadLogs(); renderInputFields(); }
+      saveLogs(logs);
+      editingLogId = null;
+      loadLogs();
     }
-    
-    function deleteLog(id) { saveLogs(getLogs().filter(i => i.id !== id)); loadLogs(); renderInputFields(); }
-    
+
+    function deleteLog(id) {
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+      let logs = getLogs();
+      logs = logs.filter(l => l.id !== id);
+      saveLogs(logs);
+      loadLogs();
+    }
+
+    function openModal(src) {
+      const modal = document.getElementById('imageModal');
+      const img = document.getElementById('modalImg');
+      if (modal && img) {
+        img.src = src;
+        modal.style.display = 'flex';
+      }
+    }
+    function closeModal() {
+      const modal = document.getElementById('imageModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // Stats / Charts Logic
     function addStatRecord() {
+      const weight = document.getElementById('statWeight').value.trim();
+      const muscle = document.getElementById('statMuscle').value.trim();
+      const bmi = document.getElementById('statBmi').value.trim();
+      const bench = document.getElementById('statBench').value.trim();
+      const squat = document.getElementById('statSquat').value.trim();
+      const dead = document.getElementById('statDead').value.trim();
+
+      if (!weight && !muscle && !bmi && !bench && !squat && !dead) {
+        alert('기록할 값을 하나 이상 입력하세요.');
+        return;
+      }
+
       const stats = getStats();
       stats.push({
         id: Date.now(),
         dateStr: getTodayFormatted(),
-        weight: document.getElementById('statWeight').value,
-        muscle: document.getElementById('statMuscle').value,
-        bmi: document.getElementById('statBmi').value,
-        bench: document.getElementById('statBench').value,
-        squat: document.getElementById('statSquat').value,
-        dead: document.getElementById('statDead').value
+        weight, muscle, bmi, bench, squat, dead
       });
-      saveStats(stats); alert('저장 완료!'); renderCharts();
+      saveStats(stats);
+      document.getElementById('statWeight').value = '';
+      document.getElementById('statMuscle').value = '';
+      document.getElementById('statBmi').value = '';
+      document.getElementById('statBench').value = '';
+      document.getElementById('statSquat').value = '';
+      document.getElementById('statDead').value = '';
+      renderCharts();
+      alert('체형/3대 기록이 저장되었습니다.');
     }
-    
+
     function renderCharts() {
       const stats = getStats();
       const labels = stats.map(s => s.dateStr);
-      const chartConfigs = [
-        { id: 'bodyChart', datasets: [{ label: '체중', data: stats.map(s => s.weight), borderColor: '#4caf50' }, { label: '근육', data: stats.map(s => s.muscle), borderColor: '#2196f3' }] },
-        { id: 'benchChart', datasets: [{ label: '벤치', data: stats.map(s => s.bench), borderColor: '#ff9800' }] },
-        { id: 'squatChart', datasets: [{ label: '스쿼트', data: stats.map(s => s.squat), borderColor: '#e53935' }] },
-        { id: 'deadChart', datasets: [{ label: '데드', data: stats.map(s => s.dead), borderColor: '#9c27b0' }] }
-      ];
-      chartConfigs.forEach(c => {
-        if (chartInstances[c.id]) {
-          chartInstances[c.id].destroy();
+
+      const bodyDataW = stats.map(s => parseFloat(s.weight) || null);
+      const bodyDataM = stats.map(s => parseFloat(s.muscle) || null);
+      const benchData = stats.map(s => parseFloat(s.bench) || null);
+      const squatData = stats.map(s => parseFloat(s.squat) || null);
+      const deadData = stats.map(s => parseFloat(s.dead) || null);
+
+      renderSingleChart('bodyChart', labels, [
+        { label: '체중 (kg)', data: bodyDataW, borderColor: '#4caf50', backgroundColor: '#4caf50' },
+        { label: '골격근량 (kg)', data: bodyDataM, borderColor: '#2196f3', backgroundColor: '#2196f3' }
+      ]);
+      renderSingleChart('benchChart', labels, [
+        { label: '벤치프레스 (kg)', data: benchData, borderColor: '#ff9800', backgroundColor: '#ff9800' }
+      ]);
+      renderSingleChart('squatChart', labels, [
+        { label: '스쿼트 (kg)', data: squatData, borderColor: '#e53935', backgroundColor: '#e53935' }
+      ]);
+      renderSingleChart('deadChart', labels, [
+        { label: '데드리프트 (kg)', data: deadData, borderColor: '#ab47bc', backgroundColor: '#ab47bc' }
+      ]);
+    }
+
+    function renderSingleChart(canvasId, labels, datasets) {
+      const ctx = document.getElementById(canvasId);
+      if (!ctx) return;
+      if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+      }
+      chartInstances[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' } },
+            y: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' } }
+          },
+          plugins: { legend: { labels: { color: '#fff', font: { size: 11 } } } }
         }
-        const ctx = document.getElementById(c.id).getContext('2d');
-        chartInstances[c.id] = new Chart(ctx, { type: 'line', data: { labels, datasets: c.datasets }, options: { responsive: true, maintainAspectRatio: false } });
       });
     }
-    
-    function openModal(src) { document.getElementById('modalImg').src = src; document.getElementById('imageModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('imageModal').style.display = 'none'; }
-    
+
+    // Backup / Restore
     function exportJsonFile() {
-      const data = { logs: getLogs(), stats: getStats() };
+      const data = {
+        logs: getLogs(),
+        stats: getStats()
+      };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -756,20 +821,25 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          const data = JSON.parse(e.target.result);
-          if (data.logs) saveLogs(data.logs);
-          if (data.stats) saveStats(data.stats);
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.logs) localStorage.setItem('gym_logs_v5', JSON.stringify(parsed.logs));
+          if (parsed.stats) localStorage.setItem('gym_stats_v1', JSON.stringify(parsed.stats));
+          alert('복원이 완료되었습니다.');
           loadLogs();
-          renderInputFields();
-          alert('데이터 복원이 완료되었습니다.');
+          renderCalendar();
         } catch (err) {
-          alert('올바른 백업 파일이 아닙니다.');
+          alert('유효하지 않은 백업 파일입니다.');
         }
       };
       reader.readAsText(file);
     }
 
-    renderInputFields(); renderRecommendations(); loadLogs();
+    // Initial Load
+    window.onload = function() {
+      renderInputFields();
+      loadLogs();
+      renderRecommendations();
+    };
   </script>
 </body>
 </html>
